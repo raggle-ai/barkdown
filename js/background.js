@@ -4,7 +4,10 @@
         if (req.message === 'autoreload') {
             (async () => {
                 try {
-                    const res = await fetch(req.url.href, {cache: "no-cache"})
+                    const res = await fetch(req.url.href, {
+                        cache: "no-cache",
+                        credentials: "omit"
+                    })
                     const text = await res.text()
                     sendResponse({
                         data: text
@@ -17,6 +20,5 @@
 
         return true;
     });
-
 
 })()
