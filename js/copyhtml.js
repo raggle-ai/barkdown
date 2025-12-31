@@ -1,4 +1,4 @@
-var cdnPrefix = 'https://cdn.jsdelivr.net/gh/volca/markdown-preview/';
+var cdnPrefix = 'https://cdn.jsdelivr.net/gh/raggle/barkdown/';
 if (typeof $('link#theme').attr('href') != "undefined") {
     var cssFile = $('link#theme').attr('href').split('/').pop()
     $('link#theme').attr('href',  cdnPrefix + 'theme/' + cssFile);
