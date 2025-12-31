@@ -15,6 +15,11 @@ body {
     line-height: 18px;
     color: #737373;
     margin: 10px 13px 10px 13px;
+    /* Prevent horizontal column layout for local files */
+    display: block !important;
+    columns: unset !important;
+    column-count: unset !important;
+    flex-direction: column !important;
 }
 a {
     color: #0069d6;

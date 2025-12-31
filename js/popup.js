@@ -52,6 +52,12 @@ $('#btn-copy').click(function() {
     });
 });
 
+$('#btn-copy-raw').click(function() {
+    chrome.tabs.executeScript({
+        file: '/js/copyraw.js'
+    });
+});
+
 storage.get('disable_markdown', function(items) {
     if(items.disable_markdown) {
         $('#disable-markdown').attr('checked', 'checked');

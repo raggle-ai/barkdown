@@ -14,6 +14,11 @@ body {
   color: #fff;
   background-color: #282a36;
   margin: 0;
+  /* Prevent horizontal column layout for local files */
+  display: block !important;
+  columns: unset !important;
+  column-count: unset !important;
+  flex-direction: column !important;
 }
 
 h1,

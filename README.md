@@ -1,94 +1,70 @@
-# Markdown Preview Plus
+# BarkDown
 
-Automatically parses markdown files (.md) into HTML. This is useful
-if you're writing markdown (ultimately targeting HTML) and want a quick
-preview.
+**Your markdown's best friend.**
+
+BarkDown fetches your markdown files and transforms them into beautifully rendered HTML - right in your browser. Like a loyal pup, it's always ready to help you preview your docs.
 
 [Get it for Chrome][webstore]
 
-Features
---------
+## Features
 
-1. Support auto reload.
-1. Support external css file.
-1. Customize theme for every md file.
-1. Support github flavored markdown.
-1. Export nicely formatted HTML.
-1. KaTex support
-1. MathJax support
-1. Mermaid support
+- **Auto-reload** - BarkDown watches your files and refreshes automatically
+- **Custom themes** - Pick a style that suits you, or bring your own CSS
+- **GitHub Flavored Markdown** - Full GFM support, just like you'd expect
+- **Export to HTML** - Copy nicely formatted HTML with one click
+- **KaTeX support** - Beautiful math rendering
+- **MathJax support** - Even more math options
+- **Mermaid diagrams** - Flowcharts, sequence diagrams, and more
 
-Usage
------
+## Quick Start
 
-1. Install extension from [webstore][] (creates no new UI)
-2. Check "Allow access to file URLs" in `chrome://extensions` listing: ![fileurls](http://i.imgur.com/qth3K.png)
-3. Open local or remote .md file in Chrome.
-4. See nicely formatted HTML!
+1. Install BarkDown from the [Chrome Web Store][webstore]
+2. Go to `chrome://extensions` and enable "Allow access to file URLs"  
+   ![fileurls](http://i.imgur.com/qth3K.png)
+3. Open any `.md` file in Chrome
+4. Watch BarkDown fetch you a beautiful preview!
 
-Math Syntax
------------
+## Math Syntax
 
-Markdown Preview Plus uses the KaTex engine to support rendering of
-mathematical expressions.  Markdown Preview Plus supports the following math
-syntax.  To minimize interference between Markdown and KaTex, some standard
-LaTeX delimiters (indicated below) are disabled by default to avoid conflict
-with Markdown syntax.  LaTeX syntax can be enabled in the options.
+BarkDown uses KaTeX to render mathematical expressions. To avoid conflicts with standard Markdown syntax, some LaTeX delimiters are disabled by default but can be enabled in the options.
 
-### Inline Math ###
+### Inline Math
 
-* __Single Dollar Signs__ (requires LaTeX delimiters):
-  <code class="tex2jax_ignore">`$math$`</code>.  When LaTeX syntax is enabled,
-  dollar signs used in non-math contexts should be escaped with a backslash:
-  <code class="tex2jax_ignore">`\$`</code>
+| Syntax | Notes |
+|--------|-------|
+| `$math$` | Requires LaTeX delimiters enabled. Escape dollar signs with `\$` |
+| `\(math\)` | Requires LaTeX delimiters enabled |
+| `\\(math\\)` | Works by default |
+| `` $`math`$ `` | Works by default |
 
-* __Single Backslash with Parentheses__ (requires LaTex delimiters):
-  <code class="tex2jax_ignore">`\(math\)`</code>.  Conflicts with Markdown's
-  escaped syntax for parentheses `\(`.
+### Display Math
 
-* __Double Backslash with Parentheses__:
-  <code class="tex2jax_ignore">`\\(math\\)`</code>
+| Syntax | Notes |
+|--------|-------|
+| `\[math\]` | Requires LaTeX delimiters enabled |
+| `\\[math\\]` | Works by default |
+| `$$math$$` | Works by default |
+| ` ```math ` | Code block style, works by default |
 
-* __Single Dollar with Backquote__:
-  <code class="tex2jax_ignore">``$`math`$``</code>
+## Credits
 
-### Display Math ###
+BarkDown is built on the shoulders of these awesome open source projects:
 
-* __Single Backslash with Brackets__ (requires LaTeX delimiters):
-  <code class="tex2jax_ignore">`\[math\]`</code>.  Conflicts with Markdown's
-  escaped syntax for brackets `\[`.
+- [Marked][marked] - Fast markdown parser
+- [markdown preview][mp] - The original inspiration
+- [Mermaid][mermaid] - Diagrams and charts
+- [MathJax][mathjax] - Math rendering engine
 
-* __Double Backslash with Brackets__:
-  <code class="tex2jax_ignore">`\\[math\\]`</code>
+## Links
 
-* __Double Dollar Signs__:
-  <code class="tex2jax_ignore">`$$math$$`</code>
+- [Change Log](https://github.com/volca/markdown-preview/wiki/Changelog)
 
-* __Math Code Block__:
-  ````
-  ```math
-  math
-  ```
-  ````
+---
 
-Credits
------
-
-This extension uses the following open source components:
-
-* [Marked][marked] - A markdown parser written in JavaScript
-* [markdown preview][mp] - The original markdown preview
-* [mermaid][mermaid] - A Javascript based diagramming and charting tool
-* [MathJax][mathjax] - A JavaScript display engine for LaTeX, MathML, and AsciiMath notation
-
-Links
------------------
-
-* [Change Log](https://github.com/volca/markdown-preview/wiki/Changelog)
+*Made with tail wags by [Raggle](https://raggle.ai)*
 
 [webstore]: https://chrome.google.com/webstore/detail/markdown-preview-plus/febilkbfcbhebfnokafefeacimjdckgl
 [marked]: https://github.com/chjj/marked
 [mp]: https://github.com/borismus/markdown-preview
 [mermaid]: https://github.com/mermaid-js/mermaid
 [mathjax]: https://github.com/mathjax/MathJax
-

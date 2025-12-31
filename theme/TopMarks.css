@@ -6,6 +6,14 @@
 	line-height: 22px;
 }
 
+body {
+	/* Prevent horizontal column layout for local files */
+	display: block !important;
+	columns: unset !important;
+	column-count: unset !important;
+	flex-direction: column !important;
+}
+
 d,c,t {
 	text-align: center; 
 	display: inline-block; 

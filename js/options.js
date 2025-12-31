@@ -277,3 +277,41 @@ storage.get('custom_css_paths', function(items) {
 
     $('#css-paths').val(JSON.parse(paths).join('\n'))
 })
+
+// Host permissions for all URLs
+const allUrlsPermission = { origins: ["*://*/"] };
+
+function checkHostPermission() {
+    chrome.permissions.contains(allUrlsPermission, function(hasPermission) {
+        $('#allow-all-urls').prop('checked', hasPermission);
+        if (hasPermission) {
+            $('#permission-status').text('Permission granted. The extension can render markdown from any website.');
+        } else {
+            $('#permission-status').text('Permission not granted. Click the checkbox to enable.');
+        }
+    });
+}
+
+$('#allow-all-urls').change(function() {
+    if ($(this).prop('checked')) {
+        chrome.permissions.request(allUrlsPermission, function(granted) {
+            if (granted) {
+                $('#permission-status').text('Permission granted. The extension can render markdown from any website.');
+                message('Website access permission granted.');
+            } else {
+                $('#allow-all-urls').prop('checked', false);
+                $('#permission-status').text('Permission denied. The extension cannot render markdown from websites.');
+                message('Permission was denied.', 'warning');
+            }
+        });
+    } else {
+        chrome.permissions.remove(allUrlsPermission, function(removed) {
+            if (removed) {
+                $('#permission-status').text('Permission removed. The extension will only work on local files.');
+                message('Website access permission removed.');
+            }
+        });
+    }
+});
+
+checkHostPermission();

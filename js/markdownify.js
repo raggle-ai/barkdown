@@ -11,6 +11,104 @@
         toc = [],
         storage = chrome.storage.local;
 
+    // Dark mode toggle functionality
+    function createDarkModeToggle() {
+        var toggleBtn = document.createElement('button');
+        toggleBtn.id = 'dark-mode-toggle';
+        toggleBtn.innerHTML = getDarkModeIcon();
+        toggleBtn.title = 'Toggle dark/light mode';
+        
+        // Apply styles
+        toggleBtn.style.cssText = `
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: 2px solid #0969da;
+            background-color: #ddf4ff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 9999;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(9, 105, 218, 0.3);
+        `;
+        
+        toggleBtn.addEventListener('mouseenter', function() {
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                this.style.backgroundColor = '#388bfd';
+                this.style.transform = 'scale(1.05)';
+            } else {
+                this.style.backgroundColor = '#0969da';
+                this.style.color = '#ffffff';
+                this.style.transform = 'scale(1.05)';
+            }
+        });
+        
+        toggleBtn.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+            updateToggleButtonStyle(toggleBtn);
+        });
+        
+        toggleBtn.addEventListener('click', function() {
+            toggleDarkMode(toggleBtn);
+        });
+        
+        document.body.appendChild(toggleBtn);
+        
+        // Initialize based on saved preference or system preference
+        initDarkMode(toggleBtn);
+    }
+    
+    function getDarkModeIcon() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        return isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'; // Sun or Moon emoji
+    }
+    
+    function initDarkMode(toggleBtn) {
+        storage.get('darkMode', function(items) {
+            var darkMode = items.darkMode;
+            if (darkMode === undefined) {
+                // Use system preference if no saved preference
+                darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+            applyDarkMode(darkMode, toggleBtn);
+        });
+    }
+    
+    function toggleDarkMode(toggleBtn) {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var newMode = !isDark;
+        storage.set({ darkMode: newMode });
+        applyDarkMode(newMode, toggleBtn);
+    }
+    
+    function applyDarkMode(isDark, toggleBtn) {
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        toggleBtn.innerHTML = isDark ? '\u2600\uFE0F' : '\uD83C\uDF19';
+        updateToggleButtonStyle(toggleBtn);
+    }
+    
+    function updateToggleButtonStyle(toggleBtn) {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            toggleBtn.style.backgroundColor = '#1f6feb';
+            toggleBtn.style.borderColor = '#58a6ff';
+            toggleBtn.style.color = '#ffffff';
+            toggleBtn.style.boxShadow = '0 2px 8px rgba(56, 139, 253, 0.4)';
+        } else {
+            toggleBtn.style.backgroundColor = '#ddf4ff';
+            toggleBtn.style.borderColor = '#0969da';
+            toggleBtn.style.color = '#0969da';
+            toggleBtn.style.boxShadow = '0 2px 8px rgba(9, 105, 218, 0.3)';
+        }
+    }
+
     mpp.isText = () => {
         var value = document.contentType;
         return value && /text\/(?:x-)?(markdown|plain)/i.test(value);
@@ -146,7 +244,16 @@
             $(document.body).html(html);
             $('img').on("error", () => resolveImg(this));
 
+            // Add dark mode toggle button
+            createDarkModeToggle();
+
             diagramFlowSeq.drawAllMermaid();
+            
+            // Initialize enhanced features
+            if (typeof markdownFeatures !== 'undefined') {
+                markdownFeatures.init();
+            }
+            
             postRender();
         });
     }
@@ -202,16 +309,16 @@
     function setTheme() {
         let pageKey = specialThemePrefix + location.href
         storage.get([pageKey, 'theme', 'custom_themes', 'custom_css_paths'], function(items) {
-            if (items.length == 0) {
-                // load default theme
-                insertThemeCss('Clearness')
-            } else if (hasValue(items, pageKey)) {
+            if (hasValue(items, pageKey)) {
                 insertThemeCss(items[pageKey])
             } else if (hasValue(items, 'custom_css_paths')) {
                 let cssPaths = JSON.parse(items.custom_css_paths)
                 insertCssPaths(cssPaths)
             } else if (hasValue(items, 'theme')) {
                 insertThemeCss(items.theme)
+            } else {
+                // load default theme
+                insertThemeCss('Github')
             }
         })
     }
@@ -255,6 +362,8 @@
             cache: false,
             complete: function(response) {
                 previousText = document.body.innerText;
+                // Store original markdown globally for copy feature
+                window.originalMarkdown = document.body.innerText;
                 makeHtml(document.body.innerText);
                 setTheme()
 
@@ -277,6 +386,13 @@
             mjc.rel = 'stylesheet';
             mjc.href = chrome.runtime.getURL('css/katex.min.css');
             $(document.head).append(mjc);
+        }
+
+        // Check if Content-Type indicates plain text or markdown
+        // This handles sites that return markdown without .md extension
+        if (mpp.isText()) {
+            render();
+            return;
         }
 
         var allExtentions = ["md", "text", "markdown", "mdown", "txt", "mkd", "rst", "rmd"];

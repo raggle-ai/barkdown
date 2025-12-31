@@ -2,16 +2,27 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>MarkDown Preview Plus options</title>
+<title>BarkDown Options</title>
 <link href="bootstrap.css" rel="stylesheet">
 <script src="js/jquery.js"></script>
 </head>
 <body>
 
 <div class="container">
-    <h1>MarkDown Preview Plus Options</h1>
+    <h1>BarkDown Options</h1>
 
     <div id="msg"></div>
+
+    <section>
+        <div class="page-header">
+            <h2>Permissions</h2>
+        </div>
+        <div class="form-group">
+            <p>To render markdown files from websites (e.g., raw.githubusercontent.com), the extension needs permission to access web pages.</p>
+            <label class="checkbox"><input type="checkbox" id="allow-all-urls"> Allow access to all websites</label>
+            <p class="help-block text-muted" id="permission-status"></p>
+        </div>
+    </section>
 
     <section>
         <div class="page-header">

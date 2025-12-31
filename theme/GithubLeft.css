@@ -5,6 +5,11 @@ body {
 	line-height:1.6em;
 	background-color: #F8F8F8;
 	padding: 0.8em;
+	/* Prevent horizontal column layout for local files */
+	display: block !important;
+	columns: unset !important;
+	column-count: unset !important;
+	flex-direction: column !important;
 }
 p {
 	margin:1em 0;

@@ -1,8 +1,8 @@
 {
-    "name": "Markdown Preview Plus",
+    "name": "BarkDown",
     "version": "0.8.11",
     "manifest_version": 3,
-    "description": "Converts and previews markdown files (.md, .markdown) to HTML(include TOC) right inside Chrome and support live reload",
+    "description": "Your markdown's best friend. Fetches and renders .md files as beautiful HTML with live reload, themes, and diagram support.",
     "icons": {
         "128": "images/icon.png",
         "48": "images/icon.png",
@@ -26,7 +26,8 @@
                 "*://*/*.mdown*",
                 "*://*/*.txt*",
                 "*://*/*.mkd*",
-                "*://*/*.rst*"
+                "*://*/*.rst*",
+                "*://raw.githubusercontent.com/*"
             ],
             "css": [
                 "css/MarkdownTOC.css",
@@ -40,6 +41,7 @@
                 "js/marked-highlight/index.js",
                 "js/purify.js",
                 "js/highlight.min.js",
+                "js/features.js",
                 "js/markdownify.js",
                 "js/underscore-min.js",
                 "js/diagramflowseq.js",
@@ -55,13 +57,13 @@
     },
     "permissions": [
         "storage",
-        "clipboardWrite"
+        "clipboardWrite",
+        "scripting",
+        "webRequest"
     ],
     "host_permissions": [
-        "file:///*"
-    ],
-    "optional_host_permissions": [
-        "*://*/"
+        "file:///*",
+        "<all_urls>"
     ],
     "web_accessible_resources": [
         {
@@ -77,7 +79,7 @@
     ],
     "action": {
         "default_icon" : "images/icon.png",
-        "default_title" : "Markdown Preview Plus",
+        "default_title" : "BarkDown",
         "default_popup" : "popup.html"
     },
     "options_page": "options.html"
