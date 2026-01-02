@@ -8,7 +8,8 @@
 	},
 	"scripts": {
 		"build": "mkdir -p build && git archive --format zip --output build/archive.zip master",
-		"lib": "gulp lib"
+		"lib": "gulp lib",
+		"dist": "gulp dist"
 	},
 	"devDependencies": {
 		"gulp": "^4.0.2",
