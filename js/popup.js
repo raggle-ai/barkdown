@@ -47,14 +47,20 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tab) {
 });
 
 $('#btn-copy').click(function() {
-    chrome.tabs.executeScript({
-        file: '/js/copyhtml.js'
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.scripting.executeScript({
+            target: {tabId: tabs[0].id},
+            files: ['/js/copyhtml.js']
+        });
     });
 });
 
 $('#btn-copy-raw').click(function() {
-    chrome.tabs.executeScript({
-        file: '/js/copyraw.js'
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.scripting.executeScript({
+            target: {tabId: tabs[0].id},
+            files: ['/js/copyraw.js']
+        });
     });
 });
 

@@ -265,7 +265,44 @@ storage.get('exclude_exts', function(items) {
     }
 
     $.each(exts, function(k, v) {
-        $('input[value="' + k + '"]').prop('checked', false);
+        $('.cont-exts input[value="' + k + '"]').prop('checked', false);
+    });
+});
+
+// Never render extensions (extensions that should never be treated as markdown)
+$('.never-render-exts input').change(function() {
+    var fileExt = this.value,
+        isChecked = this.checked;
+
+    storage.get('never_render_exts', function(items) {
+        var exts = items.never_render_exts,
+            key = fileExt;
+
+        if(!exts) {
+            exts = {};
+        }
+
+        if(isChecked) {
+            // Checked means "never render this extension" - remove from disabled list
+            delete exts[key];
+        } else {
+            // Unchecked means "allow rendering this extension" - add to disabled list
+            exts[key] = 1;
+        }
+
+        storage.set({'never_render_exts' : exts});
+    });
+});
+
+storage.get('never_render_exts', function(items) {
+    var exts = items.never_render_exts;
+    if(!exts) {
+        return;
+    }
+
+    // Uncheck extensions that user has disabled from never-render list
+    $.each(exts, function(k, v) {
+        $('.never-render-exts input[value="' + k + '"]').prop('checked', false);
     });
 });
 

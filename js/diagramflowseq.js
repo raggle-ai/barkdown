@@ -22,6 +22,12 @@ function decodeHtmlEntities(str) {
 }
 
 function drawMermaid(id) {
+    // Check if Mermaid is loaded
+    if (typeof mermaid === 'undefined') {
+        console.warn('Mermaid not loaded, skipping diagram rendering');
+        return;
+    }
+
     var divMermaid = document.getElementById(id);
     var txt = decodeHtmlEntities(divMermaid.innerHTML);
     var tmpRendId = 'tmpMerId' + id;
@@ -48,6 +54,12 @@ function drawAllMermaid() {
 }
 
 function renderKatex(srcMath, isDisplay) {
+    // Check if KaTeX is loaded
+    if (typeof katex === 'undefined') {
+        console.warn('KaTeX not loaded, skipping math rendering');
+        return srcMath;
+    }
+
     const unEscape = function (html) {
         return html
             .replace(/&amp;/g, '&')

@@ -196,66 +196,75 @@
 
     // Onload, take the DOM of the page, get the markdown formatted text out and
     // apply the converter.
-    function makeHtml(data) {
-        storage.get(['supportMath', 'katex', 'toc'], function(items) {
-            // Convert MarkDown to HTML
-            var preHtml = data;
-            if (items.katex) {
-                config.markedOptions.katex = true;
-                preHtml = diagramFlowSeq.prepareDiagram(preHtml);
-            }
-
-            if (items.toc) {
-                toc = [];
-                const renderer = new marked.Renderer()
-                const slugger = new marked.Slugger()
-                const r = {
-                  heading: renderer.heading.bind(renderer),
-                };
-
-                renderer.heading = (text, level, raw, slugger) => {
-                    var anchor = config.markedOptions.headerPrefix + slugger.serialize(raw)
-
-                    toc.push({
-                        anchor: anchor,
-                        level: level,
-                        text: text
-                    });
-
-                    return r.heading(text, level, raw, slugger);
-                };
-                config.markedOptions.renderer = renderer;
-            }
-
-            initMarked()
-            var html = marked.parse(preHtml);
-            html = DOMPurify.sanitize(html, {
-                ADD_ATTR: ['flow'],
-                SANITIZE_DOM: false
-            });
-
-            if (items.toc) {
-                var ctx = [];
-                ctx.push('<div class="toc-list"><h1 id="table-of-contents">Table of Contents</h1>\n<ul>');
-                buildCtx(toc, 0, 0, ctx);
-                ctx.push("</ul></div>");
-                html = ctx.join('') + html
-            }
-            $(document.body).html(html);
-            $('img').on("error", () => resolveImg(this));
-
-            // Add dark mode toggle button
-            createDarkModeToggle();
-
-            diagramFlowSeq.drawAllMermaid();
-            
-            // Initialize enhanced features
-            if (typeof markdownFeatures !== 'undefined') {
-                markdownFeatures.init();
-            }
-            
-            postRender();
+    async function makeHtml(data) {
+        const items = await new Promise(resolve => {
+            storage.get(['supportMath', 'katex', 'toc'], resolve);
         });
+
+        // Load required libraries based on content
+        if (items.katex && typeof lazyLoader !== 'undefined') {
+            await lazyLoader.loadRequired(data);
+        }
+
+        // Convert MarkDown to HTML
+        var preHtml = data;
+        if (items.katex && lazyLoader.isKatexLoaded()) {
+            config.markedOptions.katex = true;
+            preHtml = diagramFlowSeq.prepareDiagram(preHtml);
+        }
+
+        if (items.toc) {
+            toc = [];
+            const renderer = new marked.Renderer()
+            const slugger = new marked.Slugger()
+            const r = {
+              heading: renderer.heading.bind(renderer),
+            };
+
+            renderer.heading = (text, level, raw, slugger) => {
+                var anchor = config.markedOptions.headerPrefix + slugger.serialize(raw)
+
+                toc.push({
+                    anchor: anchor,
+                    level: level,
+                    text: text
+                });
+
+                return r.heading(text, level, raw, slugger);
+            };
+            config.markedOptions.renderer = renderer;
+        }
+
+        initMarked()
+        var html = marked.parse(preHtml);
+        html = DOMPurify.sanitize(html, {
+            ADD_ATTR: ['flow']
+        });
+
+        if (items.toc) {
+            var ctx = [];
+            ctx.push('<div class="toc-list"><h1 id="table-of-contents">Table of Contents</h1>\n<ul>');
+            buildCtx(toc, 0, 0, ctx);
+            ctx.push("</ul></div>");
+            html = ctx.join('') + html
+        }
+        $(document.body).html(html);
+        $('img').on("error", () => resolveImg(this));
+
+        // Add dark mode toggle button
+        createDarkModeToggle();
+
+        // Draw mermaid diagrams if loaded
+        if (lazyLoader.isMermaidLoaded()) {
+            diagramFlowSeq.drawAllMermaid();
+        }
+        
+        // Initialize enhanced features
+        if (typeof markdownFeatures !== 'undefined') {
+            markdownFeatures.init();
+        }
+        
+        postRender();
     }
 
     function getThemeCss(theme) {
@@ -376,7 +385,7 @@
         });
     }
 
-    storage.get(['exclude_exts', 'disable_markdown', 'katex', 'html'], function(items) {
+    storage.get(['exclude_exts', 'disable_markdown', 'katex', 'html', 'never_render_exts'], function(items) {
         if (items.disable_markdown) {
             return;
         }
@@ -386,6 +395,16 @@
             mjc.rel = 'stylesheet';
             mjc.href = chrome.runtime.getURL('css/katex.min.css');
             $(document.head).append(mjc);
+        }
+
+        // Check if file extension is in the never-render list
+        var fileExt = getExtension(location.href);
+        var defaultNeverRender = ["json", "xml", "yaml", "yml", "csv", "tsv", "log", "conf", "ini", "cfg"];
+        var neverRender = items.never_render_exts || {};
+        
+        // If extension is in default list and not explicitly disabled by user, skip rendering
+        if ($.inArray(fileExt, defaultNeverRender) != -1 && typeof neverRender[fileExt] == "undefined") {
+            return;
         }
 
         // Check if Content-Type indicates plain text or markdown
@@ -402,7 +421,6 @@
             return;
         }
 
-        var fileExt = getExtension(location.href);
         if (($.inArray(fileExt, allExtentions) != -1) &&
             (typeof exts[fileExt] == "undefined")) {
             render();

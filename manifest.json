@@ -1,7 +1,8 @@
 {
     "name": "BarkDown",
-    "version": "0.8.11",
+    "version": "0.8.12",
     "manifest_version": 3,
+    "minimum_chrome_version": "102",
     "description": "Your markdown's best friend. Fetches and renders .md files as beautiful HTML with live reload, themes, and diagram support.",
     "icons": {
         "128": "images/icon.png",
@@ -34,7 +35,6 @@
                 "css/highlight.css"
             ],
             "js": [
-                "js/katex.min.js",
                 "js/config.js",
                 "js/jquery.js",
                 "js/marked.min.js",
@@ -42,10 +42,9 @@
                 "js/purify.js",
                 "js/highlight.min.js",
                 "js/features.js",
-                "js/markdownify.js",
-                "js/underscore-min.js",
+                "js/lazyload.js",
                 "js/diagramflowseq.js",
-                "js/mermaid.min.js",
+                "js/markdownify.js",
                 "js/platumlencode.js",
                 "js/rawdeflate.js"
             ],
@@ -73,7 +72,9 @@
                 "theme/*.css",
                 "css/*.css",
                 "css/fonts/*",
-                "theme/i/*.png"
+                "theme/i/*.png",
+                "js/katex.min.js",
+                "js/mermaid.min.js"
             ]
         }
     ],
