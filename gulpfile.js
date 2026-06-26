@@ -48,6 +48,7 @@ gulp.task('dist', gulp.series('clean', function() {
     'js/purify.js',
     'js/highlight.min.js',
     'js/features.js',
+    'js/lazyload.js',
     'js/markdownify.js',
     'js/underscore-min.js',
     'js/diagramflowseq.js',
@@ -81,4 +82,3 @@ gulp.task('dist', gulp.series('clean', function() {
   // Icon
   return gulp.src('images/icon.png').pipe(gulp.dest('dist/images'));
 }));
-
