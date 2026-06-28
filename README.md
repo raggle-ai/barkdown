@@ -2,6 +2,41 @@
 
 **Your markdown's best friend.**
 
+## Package
+
+The core renderer is published as `@raggle-ai/barkdown` on GitHub Packages.
+
+Install from a project that is configured for GitHub Packages:
+
+```bash
+pnpm add @raggle-ai/barkdown
+```
+
+Add this registry line to the consuming project's `.npmrc`:
+
+```ini
+@raggle-ai:registry=https://npm.pkg.github.com
+```
+
+Use the React renderer for Markdown or trusted MDX strings:
+
+```tsx
+import { BarkdownContent } from "@raggle-ai/barkdown";
+import "@raggle-ai/barkdown/styles.css";
+
+export function Preview({ value }: { value: string }) {
+  return <BarkdownContent mode="markdown" value={value} />;
+}
+```
+
+The stylesheet contains the default Markdown element treatment for GFM tables, blockquotes, task lists, images, and code-copy controls. You can override it with normal CSS by targeting `[data-barkdown]` or passing `className`/`style` to the component.
+
+MDX strings are evaluated at runtime, so only render trusted MDX:
+
+```tsx
+<BarkdownContent mode="mdx" value={trustedMdx} />
+```
+
 BarkDown fetches your markdown files and transforms them into beautifully rendered HTML - right in your browser. Like a loyal pup, it's always ready to help you preview your docs.
 
 > **Note:** BarkDown is not yet published on the Chrome Web Store. See [Local Installation](#local-installation) below.

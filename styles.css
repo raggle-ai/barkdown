@@ -1,0 +1,168 @@
+[data-barkdown] {
+	min-width: 0;
+	color: inherit;
+	font: inherit;
+	line-height: 1.55;
+	overflow-wrap: anywhere;
+}
+
+[data-barkdown] > *:first-child {
+	margin-top: 0;
+}
+
+[data-barkdown] > *:last-child {
+	margin-bottom: 0;
+}
+
+[data-barkdown] p,
+[data-barkdown] ul,
+[data-barkdown] ol,
+[data-barkdown] blockquote,
+[data-barkdown] pre,
+[data-barkdown] table {
+	margin: 0.7em 0;
+}
+
+[data-barkdown] h1,
+[data-barkdown] h2,
+[data-barkdown] h3,
+[data-barkdown] h4,
+[data-barkdown] h5,
+[data-barkdown] h6 {
+	margin: 0.9em 0 0.45em;
+	color: inherit;
+	line-height: 1.25;
+}
+
+[data-barkdown] h1,
+[data-barkdown] h2,
+[data-barkdown] h3 {
+	font-size: 1.02em;
+}
+
+[data-barkdown] ul,
+[data-barkdown] ol {
+	padding-left: 1.2em;
+}
+
+[data-barkdown] li + li {
+	margin-top: 0.25em;
+}
+
+[data-barkdown] :is(ul, ol) :is(ul, ol) {
+	margin-top: 0.25em;
+}
+
+[data-barkdown] blockquote {
+	border-left: 3px solid color-mix(in srgb, currentColor 52%, transparent);
+	border-radius: 0 8px 8px 0;
+	background: color-mix(in srgb, currentColor 6%, transparent);
+	opacity: 0.88;
+	padding: 0.55em 0.75em;
+}
+
+[data-barkdown] code {
+	border-radius: 4px;
+	background: color-mix(in srgb, currentColor 11%, transparent);
+	font-size: 0.88em;
+	padding: 0.08em 0.28em;
+}
+
+[data-barkdown] pre {
+	overflow-x: auto;
+	border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+	border-radius: 10px;
+	background: color-mix(in srgb, currentColor 8%, transparent);
+	padding: 0.85em;
+}
+
+[data-barkdown] pre code {
+	background: transparent;
+	padding: 0;
+}
+
+[data-barkdown] table {
+	display: block;
+	max-width: 100%;
+	overflow-x: auto;
+	border-collapse: collapse;
+	border-radius: 8px;
+	font-size: 0.88em;
+}
+
+[data-barkdown] thead {
+	background: color-mix(in srgb, currentColor 9%, transparent);
+}
+
+[data-barkdown] th,
+[data-barkdown] td {
+	border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+	padding: 0.35em 0.5em;
+	text-align: left;
+	vertical-align: top;
+}
+
+[data-barkdown] a {
+	color: inherit;
+	font-weight: 800;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+[data-barkdown] hr {
+	width: 100%;
+	border: 0;
+	border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+	margin: 1em 0;
+}
+
+[data-barkdown] input[type="checkbox"] {
+	width: 1em;
+	height: 1em;
+	margin: 0 0.45em 0 0;
+	accent-color: currentColor;
+	vertical-align: -0.12em;
+}
+
+[data-barkdown] img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 8px;
+}
+
+[data-barkdown-code-block] {
+	position: relative;
+	display: block;
+}
+
+[data-barkdown-code-block] > code {
+	display: block;
+}
+
+[data-barkdown-code-copy] {
+	position: absolute;
+	top: 0.35rem;
+	right: 0.35rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.65rem;
+	height: 1.65rem;
+	border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+	border-radius: 0.45rem;
+	background: color-mix(in srgb, currentColor 9%, transparent);
+	color: inherit;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 160ms ease, background 160ms ease;
+}
+
+[data-barkdown-code-block]:hover [data-barkdown-code-copy],
+[data-barkdown-code-block]:focus-within [data-barkdown-code-copy] {
+	opacity: 0.8;
+}
+
+[data-barkdown-code-copy]:hover {
+	background: color-mix(in srgb, currentColor 14%, transparent);
+	opacity: 1;
+}

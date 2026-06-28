@@ -1,18 +1,46 @@
 {
+	"name": "@raggle-ai/barkdown",
+	"version": "0.1.0",
+	"description": "Core BarkDown renderer for Markdown and trusted MDX strings.",
+	"license": "MIT",
+	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/raggle-ai/barkdown.git"
+	},
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./styles.css": "./styles.css"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"styles.css"
+	],
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com"
+	},
 	"dependencies": {
-		"jquery": "^3.6.4",
-		"katex": "^0.16.10",
-		"marked": "^15.0.8",
-		"marked-highlight": "^2.2.1",
-		"mermaid": "11.6.0"
+		"@mdx-js/mdx": "^3.1.1",
+		"lucide-react": "^1.21.0",
+		"react-markdown": "^10.1.0",
+		"remark-gfm": "^4.0.1"
+	},
+	"peerDependencies": {
+		"react": "^19.2.0",
+		"react-dom": "^19.2.0"
 	},
 	"scripts": {
-		"build": "mkdir -p build && git archive --format zip --output build/archive.zip master",
-		"lib": "gulp lib",
-		"dist": "gulp dist"
+		"build": "tsc -p tsconfig.json",
+		"typecheck": "tsc -p tsconfig.json --noEmit"
 	},
 	"devDependencies": {
-		"gulp": "^4.0.2",
-		"gulp-rename": "^2.0.0"
+		"@types/react": "^19.2.2",
+		"typescript": "^5.9.3"
 	}
 }
