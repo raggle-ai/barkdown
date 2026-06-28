@@ -4,18 +4,10 @@
 
 ## Package
 
-The core renderer is published as `@raggle-ai/barkdown` on GitHub Packages.
-
-Install from a project that is configured for GitHub Packages:
+The core renderer is published as `@raggle-ai/barkdown` on npm.
 
 ```bash
 pnpm add @raggle-ai/barkdown
-```
-
-Add this registry line to the consuming project's `.npmrc`:
-
-```ini
-@raggle-ai:registry=https://npm.pkg.github.com
 ```
 
 Use the React renderer for Markdown or trusted MDX strings:

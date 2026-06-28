@@ -23,7 +23,8 @@
 		"styles.css"
 	],
 	"publishConfig": {
-		"registry": "https://npm.pkg.github.com"
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
 	},
 	"dependencies": {
 		"@mdx-js/mdx": "^3.1.1",
