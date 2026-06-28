@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -16,29 +17,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+      - name: Set up Aube
+        uses: jdx/aube-action@v1
         with:
-          version: 10.19.0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-          scope: "@raggle-ai"
-          cache: pnpm
+          version: 1.25.1
+          node-version: "22"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: aube install --frozen-lockfile
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: aube run typecheck
 
       - name: Build
-        run: pnpm build
+        run: aube run build
 
       - name: Publish to npm
-        run: pnpm publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: aube publish --provenance --access public --no-git-checks
