@@ -2,6 +2,8 @@ const gulp = require('gulp');
 const rename = require('gulp-rename')
 const { rm } = require('fs/promises');
 
+const extensionDist = 'extension-dist';
+
 gulp.task('lib', function () {
   gulp.src(['node_modules/marked-highlight/lib/index.cjs'])
     .pipe(rename('index.js'))
@@ -25,19 +27,19 @@ gulp.task('lib', function () {
 
 // Clean dist folder
 gulp.task('clean', async function() {
-  await rm('dist', { recursive: true, force: true });
+  await rm(extensionDist, { recursive: true, force: true });
 });
 
 // Build extension to dist folder
 gulp.task('dist', gulp.series('clean', function() {
   // manifest.json
-  gulp.src('manifest.json').pipe(gulp.dest('dist'));
+  gulp.src('manifest.json').pipe(gulp.dest(extensionDist));
 
   // HTML files
-  gulp.src(['popup.html', 'options.html']).pipe(gulp.dest('dist'));
+  gulp.src(['popup.html', 'options.html']).pipe(gulp.dest(extensionDist));
 
   // Root CSS
-  gulp.src('bootstrap.css').pipe(gulp.dest('dist'));
+  gulp.src('bootstrap.css').pipe(gulp.dest(extensionDist));
 
   // JS files (all needed by manifest + popup + options)
   gulp.src([
@@ -60,25 +62,25 @@ gulp.task('dist', gulp.series('clean', function() {
     'js/options.js',
     'js/copyhtml.js',
     'js/copyraw.js'
-  ]).pipe(gulp.dest('dist/js'));
+  ]).pipe(gulp.dest(`${extensionDist}/js`));
 
   // marked-highlight
-  gulp.src('js/marked-highlight/index.js').pipe(gulp.dest('dist/js/marked-highlight'));
+  gulp.src('js/marked-highlight/index.js').pipe(gulp.dest(`${extensionDist}/js/marked-highlight`));
 
   // CSS files
   gulp.src([
     'css/MarkdownTOC.css',
     'css/highlight.css',
     'css/katex.min.css'
-  ]).pipe(gulp.dest('dist/css'));
+  ]).pipe(gulp.dest(`${extensionDist}/css`));
 
   // KaTeX fonts
-  gulp.src('css/fonts/*').pipe(gulp.dest('dist/css/fonts'));
+  gulp.src('css/fonts/*').pipe(gulp.dest(`${extensionDist}/css/fonts`));
 
   // Theme files
-  gulp.src('theme/*.css').pipe(gulp.dest('dist/theme'));
-  gulp.src('theme/i/*.png').pipe(gulp.dest('dist/theme/i'));
+  gulp.src('theme/*.css').pipe(gulp.dest(`${extensionDist}/theme`));
+  gulp.src('theme/i/*.png').pipe(gulp.dest(`${extensionDist}/theme/i`));
 
   // Icon
-  return gulp.src('images/icon.png').pipe(gulp.dest('dist/images'));
+  return gulp.src('images/icon.png').pipe(gulp.dest(`${extensionDist}/images`));
 }));

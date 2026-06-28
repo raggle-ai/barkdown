@@ -43,10 +43,10 @@
                 "js/highlight.min.js",
                 "js/features.js",
                 "js/lazyload.js",
-                "js/diagramflowseq.js",
-                "js/markdownify.js",
+                "js/rawdeflate.js",
                 "js/platumlencode.js",
-                "js/rawdeflate.js"
+                "js/diagramflowseq.js",
+                "js/markdownify.js"
             ],
             "run_at": "document_end"
         }

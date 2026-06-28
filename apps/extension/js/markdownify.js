@@ -15,6 +15,7 @@
     function createDarkModeToggle() {
         var toggleBtn = document.createElement('button');
         toggleBtn.id = 'dark-mode-toggle';
+        toggleBtn.className = 'md-toolbar-btn md-theme-toggle';
         toggleBtn.innerHTML = getDarkModeIcon();
         toggleBtn.title = 'Toggle dark/light mode';
         
@@ -249,7 +250,9 @@
             html = ctx.join('') + html
         }
         $(document.body).html(html);
-        $('img').on("error", () => resolveImg(this));
+        $('img').on("error", function() {
+            resolveImg(this);
+        });
 
         // Add dark mode toggle button
         createDarkModeToggle();

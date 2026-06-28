@@ -44,7 +44,6 @@
 
     // JS files to inject (in order)
     const jsFiles = [
-        "js/katex.min.js",
         "js/config.js",
         "js/jquery.js",
         "js/marked.min.js",
@@ -52,12 +51,11 @@
         "js/purify.js",
         "js/highlight.min.js",
         "js/features.js",
-        "js/markdownify.js",
-        "js/underscore-min.js",
-        "js/diagramflowseq.js",
-        "js/mermaid.min.js",
+        "js/lazyload.js",
+        "js/rawdeflate.js",
         "js/platumlencode.js",
-        "js/rawdeflate.js"
+        "js/diagramflowseq.js",
+        "js/markdownify.js"
     ];
 
     // Check if Content-Type indicates markdown or plain text

@@ -3,6 +3,7 @@
 .tern-project
 build
 dist
+extension-dist
 node_modules
-package.lock.json
+package-lock.json
 .idea

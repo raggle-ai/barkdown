@@ -617,6 +617,24 @@ var markdownFeatures = (function() {
         if (window.openSearch) window.openSearch();
     }
 
+    function getControlToolbar() {
+        let toolbar = document.getElementById('md-control-toolbar');
+        if (!toolbar) {
+            toolbar = document.createElement('div');
+            toolbar.id = 'md-control-toolbar';
+            toolbar.className = 'md-control-toolbar';
+            document.body.appendChild(toolbar);
+        }
+        document.body.classList.add('md-toolbar-visible');
+
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        if (darkModeToggle && darkModeToggle.parentNode !== toolbar) {
+            toolbar.appendChild(darkModeToggle);
+        }
+
+        return toolbar;
+    }
+
     /**
      * Add Copy to Clipboard button
      */
@@ -657,7 +675,26 @@ var markdownFeatures = (function() {
             }
         });
         
-        document.body.appendChild(btn);
+        getControlToolbar().appendChild(btn);
+    }
+
+    /**
+     * Add rendered HTML download button
+     */
+    function addDownloadButton() {
+        if (document.getElementById('md-download-html')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'md-download-html';
+        btn.className = 'md-download-html';
+        btn.innerHTML = '↓';
+        btn.title = 'Download rendered HTML';
+
+        btn.addEventListener('click', function() {
+            downloadRenderedHtml();
+        });
+
+        getControlToolbar().appendChild(btn);
     }
 
     /**
@@ -681,6 +718,7 @@ var markdownFeatures = (function() {
         // Menu items
         const items = [
             { icon: '📄', label: 'Export PDF', action: () => window.print() },
+            { icon: '↓', label: 'Download HTML', action: downloadRenderedHtml },
             { icon: '📋', label: 'Copy HTML', action: copyHtml },
             { icon: '📝', label: 'Copy Markdown', action: copyMarkdown },
             { icon: '🔗', label: 'Copy URL', action: copyUrl }
@@ -700,7 +738,7 @@ var markdownFeatures = (function() {
         
         container.appendChild(btn);
         container.appendChild(menu);
-        document.body.appendChild(container);
+        getControlToolbar().appendChild(container);
         
         // Toggle menu
         btn.addEventListener('click', function(e) {
@@ -709,36 +747,110 @@ var markdownFeatures = (function() {
         });
         
         // Close menu when clicking outside
-        document.addEventListener('click', function() {
-            menu.classList.remove('visible');
-        });
+        if (!window.mdExportMenuClickInit) {
+            document.addEventListener('click', function() {
+                const currentMenu = document.querySelector('#md-export-dropdown .md-export-menu');
+                if (currentMenu) {
+                    currentMenu.classList.remove('visible');
+                }
+            });
+            window.mdExportMenuClickInit = true;
+        }
     }
     
     /**
      * Copy rendered HTML to clipboard
      */
     function copyHtml() {
-        const html = document.body.innerHTML;
-        // Remove UI elements from copied HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
+        const html = getCleanRenderedBodyHtml();
         
-        // Remove all our UI elements
-        const removeSelectors = [
-            '.md-export-dropdown', '.md-back-to-top', '.md-progress-bar',
-            '.md-font-controls', '.md-focus-toggle', '.md-lightbox',
-            '.md-search-overlay', '#dark-mode-toggle', '.copy-code-btn',
-            '.heading-anchor', '.reading-time', '.task-progress', '.line-numbers'
-        ];
-        removeSelectors.forEach(sel => {
-            tempDiv.querySelectorAll(sel).forEach(el => el.remove());
-        });
-        
-        navigator.clipboard.writeText(tempDiv.innerHTML).then(() => {
+        navigator.clipboard.writeText(html).then(() => {
             showToast('HTML copied to clipboard!');
         }).catch(err => {
             showToast('Failed to copy HTML', true);
         });
+    }
+
+    function getCleanRenderedBodyHtml() {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = document.body.innerHTML;
+
+        const removeSelectors = [
+            '#md-control-toolbar', '.md-export-dropdown', '.md-back-to-top', '.md-progress-bar',
+            '.md-font-controls', '.md-focus-toggle', '.md-lightbox',
+            '.md-search-overlay', '#dark-mode-toggle', '.copy-code-btn',
+            '.heading-anchor', '.reading-time', '.task-progress', '.line-numbers',
+            '#md-download-html'
+        ];
+        removeSelectors.forEach(sel => {
+            tempDiv.querySelectorAll(sel).forEach(el => el.remove());
+        });
+
+        return tempDiv.innerHTML;
+    }
+
+    function downloadRenderedHtml() {
+        const title = document.title || 'BarkDown document';
+        const filename = getDownloadFilename();
+        const html = [
+            '<!doctype html>',
+            '<html>',
+            '<head>',
+            '<meta charset="utf-8">',
+            '<meta name="viewport" content="width=device-width, initial-scale=1">',
+            '<title>' + escapeHtml(title) + '</title>',
+            getCleanRenderedHeadHtml(),
+            '</head>',
+            '<body>',
+            getCleanRenderedBodyHtml(),
+            '</body>',
+            '</html>'
+        ].join('\n');
+
+        const link = document.createElement('a');
+        let url;
+
+        if (typeof Blob !== 'undefined' && typeof URL !== 'undefined' && URL.createObjectURL) {
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            url = URL.createObjectURL(blob);
+        } else {
+            url = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+        }
+
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        if (url.indexOf('blob:') === 0 && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+            URL.revokeObjectURL(url);
+        }
+        showToast('HTML download started');
+    }
+
+    function getCleanRenderedHeadHtml() {
+        const head = document.head.cloneNode(true);
+
+        head.querySelectorAll('script, title, meta[charset], meta[name="viewport"]').forEach(el => {
+            el.remove();
+        });
+
+        return head.innerHTML;
+    }
+
+    function getDownloadFilename() {
+        const pathName = window.location.pathname.split('/').filter(Boolean).pop() || 'document';
+        const baseName = pathName.replace(/\.[^.]+$/, '') || 'document';
+        return baseName.replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') + '.html';
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
     
     /**
@@ -810,13 +922,19 @@ var markdownFeatures = (function() {
         document.body.appendChild(btn);
         
         // Show/hide based on scroll position
-        window.addEventListener('scroll', function() {
-            if (window.scrollY > 300) {
-                btn.classList.add('visible');
-            } else {
-                btn.classList.remove('visible');
-            }
-        });
+        if (!window.mdBackToTopScrollInit) {
+            window.addEventListener('scroll', function() {
+                const currentButton = document.getElementById('md-back-to-top');
+                if (!currentButton) return;
+
+                if (window.scrollY > 300) {
+                    currentButton.classList.add('visible');
+                } else {
+                    currentButton.classList.remove('visible');
+                }
+            });
+            window.mdBackToTopScrollInit = true;
+        }
     }
 
     /**
@@ -835,12 +953,18 @@ var markdownFeatures = (function() {
         
         document.body.appendChild(progressContainer);
         
-        window.addEventListener('scroll', function() {
-            const scrollTop = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-            progressFill.style.width = progress + '%';
-        });
+        if (!window.mdProgressBarScrollInit) {
+            window.addEventListener('scroll', function() {
+                const currentFill = document.querySelector('#md-progress-bar .md-progress-fill');
+                if (!currentFill) return;
+
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+                currentFill.style.width = progress + '%';
+            });
+            window.mdProgressBarScrollInit = true;
+        }
     }
 
     /**
@@ -912,7 +1036,7 @@ var markdownFeatures = (function() {
         container.appendChild(decreaseBtn);
         container.appendChild(resetBtn);
         container.appendChild(increaseBtn);
-        document.body.appendChild(container);
+        getControlToolbar().appendChild(container);
         
         // Get current font size or default
         let currentSize = parseFloat(localStorage.getItem('md-font-size')) || 16;
@@ -953,42 +1077,47 @@ var markdownFeatures = (function() {
         btn.innerHTML = '◎';
         btn.title = 'Toggle focus mode (F)';
         
-        let focusModeEnabled = false;
-        
         btn.addEventListener('click', function() {
-            focusModeEnabled = !focusModeEnabled;
-            document.body.classList.toggle('md-focus-mode', focusModeEnabled);
-            btn.classList.toggle('active', focusModeEnabled);
+            window.mdFocusModeEnabled = !window.mdFocusModeEnabled;
+            document.body.classList.toggle('md-focus-mode', window.mdFocusModeEnabled);
+            btn.classList.toggle('active', window.mdFocusModeEnabled);
         });
         
-        document.body.appendChild(btn);
+        getControlToolbar().appendChild(btn);
         
         // Track mouse position for focus effect
-        document.addEventListener('mousemove', function(e) {
-            if (!focusModeEnabled) return;
-            
-            const elements = document.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, pre, blockquote, table');
-            elements.forEach(function(el) {
-                const rect = el.getBoundingClientRect();
-                const isHovered = e.clientY >= rect.top && e.clientY <= rect.bottom;
-                el.classList.toggle('md-focused', isHovered);
+        if (!window.mdFocusModeListenersInit) {
+            document.addEventListener('mousemove', function(e) {
+                if (!window.mdFocusModeEnabled) return;
+
+                const elements = document.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, pre, blockquote, table');
+                elements.forEach(function(el) {
+                    const rect = el.getBoundingClientRect();
+                    const isHovered = e.clientY >= rect.top && e.clientY <= rect.bottom;
+                    el.classList.toggle('md-focused', isHovered);
+                });
             });
-        });
-        
-        // Keyboard shortcut
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'f' && !e.ctrlKey && !e.metaKey && 
-                e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                btn.click();
-            }
-        });
+
+            // Keyboard shortcut
+            document.addEventListener('keydown', function(e) {
+                const focusToggle = document.getElementById('md-focus-toggle');
+                if (focusToggle && e.key === 'f' && !e.ctrlKey && !e.metaKey &&
+                    e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    focusToggle.click();
+                }
+            });
+
+            window.mdFocusModeListenersInit = true;
+        }
     }
 
     /**
      * Remember reading position
      */
     function initReadingPositionMemory() {
-        const pageKey = 'md-scroll-' + window.location.pathname;
+        const pageKey = 'md-scroll-' + window.location.href.split('#')[0];
+        if (window.mdReadingPositionMemoryInit === pageKey) return;
+        window.mdReadingPositionMemoryInit = pageKey;
         
         // Restore position
         const savedPosition = localStorage.getItem(pageKey);
@@ -1286,9 +1415,11 @@ var markdownFeatures = (function() {
                 .md-search-overlay,
                 .md-back-to-top,
                 .md-progress-bar,
+                .md-control-toolbar,
                 .md-font-controls,
                 .md-focus-toggle,
-                .md-export-btn {
+                .md-export-btn,
+                #md-download-html {
                     display: none !important;
                 }
                 
@@ -1359,80 +1490,82 @@ var markdownFeatures = (function() {
                 margin-right: 4px;
             }
             
-            /* Copy to clipboard button */
-            .md-copy-clipboard {
+            /* Right-side controls */
+            .md-control-toolbar {
                 position: fixed;
-                top: 70px;
+                top: 16px;
                 right: 16px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                padding: 8px;
+                border: 1px solid rgba(208, 215, 222, 0.9);
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.92);
+                box-shadow: 0 8px 24px rgba(31, 35, 40, 0.14);
+                backdrop-filter: blur(10px);
+                z-index: 9999;
+            }
+            .md-toolbar-btn,
+            .md-copy-clipboard,
+            .md-download-html,
+            .md-export-btn,
+            .md-focus-toggle {
                 width: 44px;
                 height: 44px;
-                border-radius: 10px;
-                border: 2px solid #2da44e;
-                background-color: #dafbe1;
-                cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 20px;
-                z-index: 9999;
+                border: 1px solid #d0d7de;
+                border-radius: 6px;
+                background: #f6f8fa;
+                color: #24292f;
+                cursor: pointer;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 18px;
                 transition: all 0.2s ease;
-                box-shadow: 0 2px 8px rgba(45, 164, 78, 0.3);
+                box-shadow: none;
+                line-height: 1;
             }
-            .md-copy-clipboard:hover {
-                background-color: #2da44e;
+            .md-toolbar-btn:hover,
+            .md-copy-clipboard:hover,
+            .md-download-html:hover,
+            .md-export-btn:hover,
+            .md-focus-toggle:hover {
+                background: #0969da;
+                border-color: #0969da;
                 color: #ffffff;
-                transform: scale(1.05);
+                transform: translateY(-1px);
             }
-            [data-theme="dark"] .md-copy-clipboard {
-                background-color: #238636;
-                border-color: #3fb950;
-                color: #ffffff;
-                box-shadow: 0 2px 8px rgba(63, 185, 80, 0.4);
+            #dark-mode-toggle {
+                position: static !important;
+                top: auto !important;
+                right: auto !important;
+                z-index: auto !important;
+                border-width: 1px !important;
+                box-shadow: none !important;
             }
-            [data-theme="dark"] .md-copy-clipboard:hover {
-                background-color: #3fb950;
+            .md-copy-clipboard {
+                color: #1a7f37;
             }
-            @media print {
-                .md-copy-clipboard {
-                    display: none !important;
-                }
+            .md-download-html {
+                color: #0969da;
+                font-size: 22px;
             }
             
             /* Export dropdown */
             .md-export-dropdown {
-                position: fixed;
-                top: 124px;
-                right: 16px;
-                z-index: 9999;
-            }
-            .md-export-btn {
-                width: 44px;
-                height: 44px;
-                border-radius: 10px;
-                border: 2px solid #8250df;
-                background-color: #f3e8ff;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 20px;
-                font-weight: 600;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                color: #8250df;
-                transition: all 0.2s ease;
-                box-shadow: 0 2px 8px rgba(130, 80, 223, 0.3);
-            }
-            .md-export-btn:hover {
-                background-color: #8250df;
-                color: #ffffff;
-                transform: scale(1.05);
+                position: relative;
+                z-index: auto;
             }
             .md-export-menu {
                 position: absolute;
-                top: 50px;
-                right: 0;
+                top: 0;
+                right: calc(100% + 10px);
                 background: white;
-                border-radius: 10px;
+                border: 1px solid #d0d7de;
+                border-radius: 8px;
                 box-shadow: 0 4px 20px rgba(0,0,0,0.15);
                 padding: 8px 0;
                 min-width: 180px;
@@ -1468,13 +1601,7 @@ var markdownFeatures = (function() {
                 font-size: 16px;
             }
             [data-theme="dark"] .md-export-btn {
-                background-color: #6e40c9;
-                border-color: #a371f7;
-                color: #ffffff;
-                box-shadow: 0 2px 8px rgba(163, 113, 247, 0.4);
-            }
-            [data-theme="dark"] .md-export-btn:hover {
-                background-color: #8957e5;
+                color: #a371f7;
             }
             [data-theme="dark"] .md-export-menu {
                 background: #21262d;
@@ -1487,6 +1614,7 @@ var markdownFeatures = (function() {
                 background: #30363d;
             }
             @media print {
+                .md-control-toolbar,
                 .md-export-dropdown {
                     display: none !important;
                 }
@@ -1609,13 +1737,11 @@ var markdownFeatures = (function() {
             
             /* Font size controls */
             .md-font-controls {
-                position: fixed;
-                top: 178px;
-                right: 16px;
                 display: flex;
                 flex-direction: column;
                 gap: 4px;
-                z-index: 9999;
+                padding-top: 8px;
+                border-top: 1px solid #d0d7de;
             }
             .md-font-btn {
                 width: 36px;
@@ -1645,6 +1771,53 @@ var markdownFeatures = (function() {
                 color: #0d1117;
                 border-color: #58a6ff;
             }
+            [data-theme="dark"] .md-control-toolbar {
+                border-color: #30363d;
+                background: rgba(13, 17, 23, 0.92);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            }
+            [data-theme="dark"] .md-toolbar-btn,
+            [data-theme="dark"] .md-copy-clipboard,
+            [data-theme="dark"] .md-download-html,
+            [data-theme="dark"] .md-export-btn,
+            [data-theme="dark"] .md-focus-toggle {
+                background: #21262d;
+                border-color: #30363d;
+                color: #c9d1d9;
+            }
+            [data-theme="dark"] .md-toolbar-btn:hover,
+            [data-theme="dark"] .md-copy-clipboard:hover,
+            [data-theme="dark"] .md-download-html:hover,
+            [data-theme="dark"] .md-export-btn:hover,
+            [data-theme="dark"] .md-focus-toggle:hover {
+                background: #1f6feb;
+                border-color: #388bfd;
+                color: #ffffff;
+            }
+            @media (max-width: 1120px) {
+                body.md-toolbar-visible {
+                    padding-bottom: 96px !important;
+                }
+                .md-control-toolbar {
+                    top: auto;
+                    right: 16px;
+                    bottom: 16px;
+                    flex-direction: row;
+                    align-items: center;
+                }
+                .md-font-controls {
+                    flex-direction: row;
+                    padding-top: 0;
+                    padding-left: 8px;
+                    border-top: 0;
+                    border-left: 1px solid #d0d7de;
+                }
+                .md-export-menu {
+                    top: auto;
+                    right: 0;
+                    bottom: calc(100% + 10px);
+                }
+            }
             @media print {
                 .md-font-controls {
                     display: none !important;
@@ -1653,26 +1826,7 @@ var markdownFeatures = (function() {
             
             /* Focus mode toggle */
             .md-focus-toggle {
-                position: fixed;
-                top: 274px;
-                right: 16px;
-                width: 44px;
-                height: 44px;
-                border-radius: 10px;
-                border: 2px solid #bf8700;
-                background: #fff8c5;
                 color: #bf8700;
-                font-size: 18px;
-                cursor: pointer;
-                z-index: 9999;
-                transition: all 0.2s;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .md-focus-toggle:hover {
-                background: #bf8700;
-                color: white;
             }
             .md-focus-toggle.active {
                 background: #bf8700;
@@ -1680,13 +1834,11 @@ var markdownFeatures = (function() {
                 box-shadow: 0 0 0 3px rgba(191, 135, 0, 0.3);
             }
             [data-theme="dark"] .md-focus-toggle {
-                background: #3d2e00;
-                border-color: #d4a72c;
                 color: #d4a72c;
             }
-            [data-theme="dark"] .md-focus-toggle:hover,
             [data-theme="dark"] .md-focus-toggle.active {
                 background: #d4a72c;
+                border-color: #d4a72c;
                 color: #0d1117;
             }
             @media print {
@@ -1730,6 +1882,7 @@ var markdownFeatures = (function() {
         showReadingTime();
         addImageLightbox();
         addCopyToClipboardButton();
+        addDownloadButton();
         addExportButton();
         addBackToTopButton();
         addProgressBar();

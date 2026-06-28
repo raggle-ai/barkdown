@@ -33,4 +33,5 @@ jobs:
         run: aube run build
 
       - name: Publish to npm
+        working-directory: packages/barkdown
         run: aube publish --provenance --access public --no-git-checks

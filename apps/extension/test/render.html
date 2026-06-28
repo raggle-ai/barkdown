@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BarkDown local markdown render test</title>
+    <link rel="stylesheet" href="../css/MarkdownTOC.css">
+    <link rel="stylesheet" href="../css/highlight.css">
+    <link rel="stylesheet" href="../theme/Github.css">
+    <style>
+        body {
+            box-sizing: border-box;
+            max-width: 980px;
+            margin: 32px auto;
+            padding: 0 24px 80px;
+        }
+
+        #render-status {
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            color: #57606a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            padding: 12px 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="render-status">Loading markdown...</div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/jquery.js"></script>
+    <script src="../js/marked.min.js"></script>
+    <script src="../js/marked-highlight/index.js"></script>
+    <script src="../js/purify.js"></script>
+    <script src="../js/highlight.min.js"></script>
+    <script src="../js/features.js"></script>
+    <script>
+        (async function() {
+            const params = new URLSearchParams(window.location.search);
+            const source = params.get('src') || 'test_features.md';
+            const status = document.getElementById('render-status');
+
+            try {
+                const response = await fetch(source, { cache: 'no-cache' });
+                if (!response.ok) {
+                    throw new Error('Unable to load ' + source + ' (' + response.status + ')');
+                }
+
+                const markdown = await response.text();
+                window.originalMarkdown = markdown;
+
+                marked.setOptions(config.markedOptions);
+                marked.use(markedHighlight({
+                    langPrefix: 'hljs language-',
+                    highlight(code) {
+                        return hljs.highlightAuto(code).value;
+                    }
+                }));
+
+                const html = DOMPurify.sanitize(marked.parse(markdown), {
+                    ADD_ATTR: ['flow']
+                });
+
+                document.body.innerHTML = html;
+
+                if (typeof markdownFeatures !== 'undefined') {
+                    markdownFeatures.init();
+                }
+            } catch (error) {
+                status.textContent = error.message;
+                status.style.borderColor = '#cf222e';
+                status.style.color = '#cf222e';
+            }
+        }());
+    </script>
+</body>
+</html>
