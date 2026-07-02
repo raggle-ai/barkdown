@@ -1,6 +1,6 @@
 {
 	"name": "@raggle-ai/barkdown",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Core BarkDown renderer for Markdown and trusted MDX strings.",
 	"license": "MIT",
 	"type": "module",

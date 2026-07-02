@@ -34,11 +34,12 @@ const defaultConfig = {
 	startOnLoad: false,
 	securityLevel: "strict",
 	theme: "base",
+	htmlLabels: false,
 	flowchart: {
 		curve: "basis",
-		htmlLabels: true,
 		nodeSpacing: 56,
-		rankSpacing: 72
+		rankSpacing: 72,
+		wrappingWidth: 220
 	},
 	themeVariables: {
 		fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
