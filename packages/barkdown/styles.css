@@ -166,3 +166,117 @@
 	background: color-mix(in srgb, currentColor 14%, transparent);
 	opacity: 1;
 }
+
+[data-barkdown-mermaid] {
+	--barkdown-mermaid-bg: canvas;
+	--barkdown-mermaid-border: color-mix(in srgb, currentColor 16%, transparent);
+	--barkdown-mermaid-text: currentColor;
+	--barkdown-mermaid-muted: color-mix(in srgb, currentColor 66%, transparent);
+	--barkdown-mermaid-action-bg: color-mix(in srgb, currentColor 6%, transparent);
+	--barkdown-mermaid-action-hover-bg: color-mix(in srgb, currentColor 11%, transparent);
+	--barkdown-mermaid-error: #b42318;
+	position: relative;
+	margin: 1.5rem 0;
+	border: 1px solid var(--barkdown-mermaid-border);
+	border-radius: 8px;
+	background: var(--barkdown-mermaid-bg);
+	color: var(--barkdown-mermaid-text);
+	overflow: hidden;
+}
+
+[data-barkdown-mermaid].is-fullscreen {
+	position: fixed;
+	z-index: 1000;
+	inset: 1rem;
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr);
+	margin: 0;
+	box-shadow: 0 24px 70px color-mix(in srgb, black 28%, transparent);
+}
+
+[data-barkdown-mermaid-toolbar] {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	border-bottom: 1px solid var(--barkdown-mermaid-border);
+	padding: 0.6rem 0.75rem;
+}
+
+[data-barkdown-mermaid-title] {
+	min-width: 0;
+	color: var(--barkdown-mermaid-muted);
+	font-size: 0.78rem;
+	font-weight: 700;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+[data-barkdown-mermaid-controls] {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.35rem;
+}
+
+[data-barkdown-mermaid-action] {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2rem;
+	height: 1.8rem;
+	border: 1px solid var(--barkdown-mermaid-border);
+	border-radius: 6px;
+	background: var(--barkdown-mermaid-action-bg);
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.75rem;
+	font-weight: 720;
+	line-height: 1;
+	padding: 0 0.55rem;
+}
+
+[data-barkdown-mermaid-action]:hover {
+	background: var(--barkdown-mermaid-action-hover-bg);
+}
+
+[data-barkdown-mermaid-viewport] {
+	position: relative;
+	min-height: 240px;
+	max-width: 100%;
+	overflow: auto;
+	padding: 1rem;
+}
+
+[data-barkdown-mermaid].is-fullscreen [data-barkdown-mermaid-viewport] {
+	min-height: 0;
+}
+
+[data-barkdown-mermaid-surface] {
+	display: inline-block;
+	min-width: min(960px, 100%);
+	transform-origin: top left;
+}
+
+[data-barkdown-mermaid-surface] svg {
+	display: block;
+	width: max-content;
+	min-width: min(960px, 100%);
+	max-width: none;
+	height: auto;
+}
+
+[data-barkdown-mermaid-status],
+[data-barkdown-mermaid-error] {
+	color: var(--barkdown-mermaid-muted);
+	font-size: 0.88rem;
+	line-height: 1.5;
+	padding: 1rem;
+}
+
+[data-barkdown-mermaid-error] {
+	color: var(--barkdown-mermaid-error);
+	white-space: pre-wrap;
+}
