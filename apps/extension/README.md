@@ -50,3 +50,4 @@ BarkDown uses KaTeX to render mathematical expressions. To avoid conflicts with 
 
 - [Change Log](CHANGELOG.md)
 - [Wiki / Documentation](docs/WIKI.md)
+- [Rendered Markdown Test Page](https://raggle-ai.github.io/barkdown/test/render.html)
