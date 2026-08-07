@@ -7,14 +7,21 @@ import {
 	type ComponentProps,
 	type ComponentType,
 	type CSSProperties,
+	isValidElement,
 	type ReactNode,
 	useEffect,
 	useMemo,
 	useState
 } from "react";
 import ReactMarkdown, { type Components as MarkdownComponents } from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import * as runtime from "react/jsx-runtime";
+
+import { remarkGithubEmojiImages } from "./emoji.js";
+import { BarkdownMermaid } from "./react-mermaid.js";
 
 function joinClassNames(...values: Array<string | undefined>): string | undefined {
 	const className = values.filter(Boolean).join(" ");
@@ -67,17 +74,33 @@ export function BarkdownMarkdown({
 	const mergedComponents = useMemo<MarkdownComponents>(() => {
 		return {
 			code: (props) => <CodeBlock copy={copyCode} {...props} />,
+			pre: (props) => <PreBlock {...props} />,
 			...components
 		};
 	}, [components, copyCode]);
 
 	return (
 		<div className={joinClassNames("barkdown-content", className)} data-barkdown="" style={style}>
-			<ReactMarkdown components={mergedComponents} remarkPlugins={[remarkGfm]}>
+			<ReactMarkdown
+				components={mergedComponents}
+				rehypePlugins={[rehypeHighlight, rehypeKatex]}
+				remarkPlugins={[remarkGfm, remarkMath, remarkGithubEmojiImages]}
+			>
 				{value}
 			</ReactMarkdown>
 		</div>
 	);
+}
+
+function PreBlock({ children, ...props }: ComponentProps<"pre">) {
+	if (
+		isValidElement<{ className?: string }>(children) &&
+		children.props.className?.split(/\s+/).includes("language-mermaid")
+	) {
+		return children;
+	}
+
+	return <pre {...props}>{children}</pre>;
 }
 
 export function BarkdownMdx({
@@ -158,8 +181,14 @@ export function CodeBlock({
 }: BarkdownCodeProps & { copy?: boolean }) {
 	const [copied, setCopied] = useState(false);
 	const text = String(children ?? "").replace(/\n$/, "");
+	const language = /(?:^|\s)language-([\w+-]+)/.exec(className ?? "")?.[1]?.toLowerCase();
+	const block = inline === false || Boolean(className) || text.includes("\n");
 
-	if (inline) {
+	if (language === "mermaid") {
+		return <BarkdownMermaid diagram={text} />;
+	}
+
+	if (!block) {
 		return (
 			<code className={className} {...props}>
 				{children}

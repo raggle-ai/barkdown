@@ -17,7 +17,24 @@ export function Preview({ value }: { value: string }) {
 }
 ```
 
-The stylesheet contains the default Markdown element treatment for GFM tables, blockquotes, task lists, images, and code-copy controls. You can override it with normal CSS by targeting `[data-barkdown]` or passing `className`/`style` to the component.
+Markdown rendering includes GitHub-flavored Markdown, syntax highlighting, KaTeX formulas, GitHub emoji shortcodes, and fenced Mermaid diagrams. The stylesheet contains their default visual treatment and the code-copy controls. You can override it with normal CSS by targeting `[data-barkdown]` or passing `className`/`style` to the component.
+
+## Folder explorer
+
+```tsx
+import { BarkdownExplorer } from "@raggle-ai/barkdown/explorer";
+import "@raggle-ai/barkdown/explorer.css";
+
+const source = {
+  read: async () => fetch("/api/documents").then((response) => response.json()),
+};
+
+export function App() {
+  return <BarkdownExplorer source={source} />;
+}
+```
+
+Use `readFolder` from `@raggle-ai/barkdown/node` to read Markdown, HTML, and text files. Use `barkdownPlugin` from `@raggle-ai/barkdown/vite` in a Vite development server.
 
 MDX strings are evaluated at runtime, so only render trusted MDX:
 
@@ -25,7 +42,7 @@ MDX strings are evaluated at runtime, so only render trusted MDX:
 <BarkdownContent mode="mdx" value={trustedMdx} />
 ```
 
-## VitePress Mermaid Diagrams
+## VitePress Mermaid diagrams
 
 Barkdown also ships a VitePress Mermaid renderer. Register the component in your theme and install the Markdown fence renderer in your VitePress config:
 

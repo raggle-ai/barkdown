@@ -1,0 +1,40 @@
+{
+  "name": "BarkDown",
+  "version": "0.9.0",
+  "manifest_version": 3,
+  "minimum_chrome_version": "102",
+  "description": "Read local Markdown, HTML, and text files in a searchable folder explorer.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu/25PafpmLGPFigNDGOBSuIcdc913zFmLjCxhMAdmOvXvwuI1HZc4kRDLO9lQ4AVbOndoDTJJW3RSdSzJ/RxmKXyr/FXfhE4jGJNF41rVcg65Pe8Xwp4AIwFWsuKDgHy3TA+V5j8H5zHBFCWiw5rtjq34nKWk7fRxatMEUyRTxhBHSOyjccCBphhpqTEmM+hyMg0y2uUN0QB6zkiSYkD0Xf1lI/rOM0U2cb93sDIXgUakSsW8rcY9cL72hnX6JM7tdnV+4Tza7d4rZpwm9Xw96KXzDhWbPPKg5WybKMwzrS7x7XHdb2/9JZJKMlhBAC2jW5afLhzGcuGciOXzgho+QIDAQAB",
+  "icons": {
+    "128": "images/icon-128.png",
+    "48": "images/icon-48.png",
+    "32": "images/icon-32.png",
+    "16": "images/icon-16.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "file:///*",
+        "*://*/*.md",
+        "*://*/*.MD",
+        "*://raw.githubusercontent.com/*"
+      ],
+      "css": ["style.css"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["nativeMessaging"],
+  "host_permissions": ["file:///*"],
+  "action": {
+    "default_icon": {
+      "48": "images/icon-48.png",
+      "32": "images/icon-32.png",
+      "16": "images/icon-16.png"
+    },
+    "default_title": "BarkDown"
+  }
+}

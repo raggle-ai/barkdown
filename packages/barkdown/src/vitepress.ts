@@ -10,6 +10,8 @@ import {
 	type VNode
 } from "vue";
 
+import { defaultMermaidConfig, mermaidId } from "./mermaid.js";
+
 type MarkdownToken = {
 	content: string;
 	info: string;
@@ -29,39 +31,6 @@ export type BarkdownMermaidConfig = Record<string, unknown>;
 export type BarkdownMermaidOptions = {
 	componentName?: string;
 };
-
-const defaultConfig = {
-	startOnLoad: false,
-	securityLevel: "strict",
-	theme: "base",
-	htmlLabels: false,
-	flowchart: {
-		curve: "basis",
-		nodeSpacing: 56,
-		rankSpacing: 72,
-		wrappingWidth: 220
-	},
-	themeVariables: {
-		fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-		primaryColor: "#ffffff",
-		primaryTextColor: "#20232a",
-		primaryBorderColor: "#ded8cf",
-		lineColor: "#6d737c",
-		secondaryColor: "#f4f1ea",
-		tertiaryColor: "#f8f6f2"
-	}
-} as const;
-
-function idFor(value: string): string {
-	let hash = 0;
-
-	for (let index = 0; index < value.length; index += 1) {
-		hash = (hash << 5) - hash + value.charCodeAt(index);
-		hash |= 0;
-	}
-
-	return `barkdown-mermaid-${Math.abs(hash)}`;
-}
 
 function clamp(value: number): number {
 	return Math.min(2.4, Math.max(0.6, value));
@@ -103,7 +72,7 @@ export const BarkdownMermaid = defineComponent({
 		const zoom = ref(1);
 		const fullscreen = ref(false);
 		const source = computed(() => props.diagram.trim());
-		const id = computed(() => idFor(source.value));
+		const id = computed(() => mermaidId(source.value));
 
 		async function render() {
 			if (!source.value) return;
@@ -116,7 +85,7 @@ export const BarkdownMermaid = defineComponent({
 
 			const { default: mermaid } = await import("mermaid");
 			mermaid.initialize({
-				...defaultConfig,
+				...defaultMermaidConfig,
 				...(props.config ?? {})
 			});
 

@@ -9,3 +9,7 @@ export {
 	type BarkdownMdxProps,
 	type BarkdownMode
 } from "./react.js";
+export {
+	BarkdownMermaid,
+	type BarkdownMermaidProps
+} from "./react-mermaid.js";
