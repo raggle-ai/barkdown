@@ -15,23 +15,29 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Set up Aube
-        uses: jdx/aube-action@v1
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 1.25.1
-          node-version: "22"
+          version: 9.9.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Install dependencies
-        run: aube install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Typecheck
-        run: aube run typecheck
+        run: pnpm typecheck
 
       - name: Build
-        run: aube run build
+        run: pnpm build
 
       - name: Publish to npm
         working-directory: packages/barkdown
-        run: aube publish --provenance --access public --no-git-checks
+        run: npm publish --provenance --access public
