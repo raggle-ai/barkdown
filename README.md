@@ -5,7 +5,7 @@ BarkDown is a pnpm workspace with two related surfaces:
 - `packages/barkdown` - the public `@raggle-ai/barkdown` React package for Markdown and trusted MDX rendering.
 - `extension` - the Chrome extension that renders local Markdown files with its browser-extension renderer.
 
-The extension does not import the React package. Keeping the two surfaces separate avoids bundling React into the Manifest V3 content-script path and keeps the npm package focused on application imports.
+The extension imports the `@raggle-ai/barkdown` React package through `workspace:*`. This shared package provides one Markdown viewer for both the Chrome extension and Kennel.
 
 ## Commands
 

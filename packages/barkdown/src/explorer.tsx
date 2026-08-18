@@ -372,6 +372,7 @@ export function BarkdownExplorer({
                 />
               ) : document.kind === "markdown" ? (
                 <BarkdownContent
+                  collapsibleHeadings
                   mode="markdown"
                   value={content.body}
                   components={{ a: relativeLink }}
