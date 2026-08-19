@@ -54,7 +54,7 @@ $this->setError($errorMessage);
 
 ## Formulas in a table
 
-| Type | Example |
-| --- | --- |
-| Data | $Z_{0..n}$ |
+| Type    | Example             |
+| ------- | ------------------- |
+| Data    | $Z_{0..n}$          |
 | Formula | $\frac{1}{(x-1)^2}$ |

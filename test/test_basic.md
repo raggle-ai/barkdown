@@ -1,4 +1,4 @@
-# Markdown: Basics #
+# Markdown: Basics
 
 Getting the Gist of Markdown's Formatting Syntax
 ------------------------------------------------
@@ -17,19 +17,18 @@ and translate it to XHTML.
 **Note:** This document is itself written using Markdown; you
 can [see the source for it by adding '.text' to the URL][src].
 
-  [s]: /projects/markdown/syntax  "Markdown Syntax"
-  [d]: /projects/markdown/dingus  "Markdown Dingus"
-  [src]: /projects/markdown/basics.text
+[s]: /projects/markdown/syntax "Markdown Syntax"
+[d]: /projects/markdown/dingus "Markdown Dingus"
+[src]: /projects/markdown/basics.text
 
-
-## Paragraphs, Headers, Blockquotes ##
+## Paragraphs, Headers, Blockquotes
 
 A paragraph is simply one or more consecutive lines of text, separated
 by one or more blank lines. (A blank line is any line that looks like a
 blank line -- a line containing nothing spaces or tabs is considered
 blank.) Normal paragraphs should not be intended with spaces or tabs.
 
-Markdown offers two styles of headers: *Setext* and *atx*.
+Markdown offers two styles of headers: _Setext_ and _atx_.
 Setext-style headers for `<h1>` and `<h2>` are created by
 "underlining" with equal signs (`=`) and hyphens (`-`), respectively.
 To create an atx-style header, you put 1-6 hash marks (`#`) at the
@@ -42,7 +41,7 @@ Markdown:
 
     A First Level Header
     ====================
-    
+
     A Second Level Header
     ---------------------
 
@@ -52,42 +51,39 @@ Markdown:
 
     The quick brown fox jumped over the lazy
     dog's back.
-    
+
     ### Header 3
 
     > This is a blockquote.
-    > 
+    >
     > This is the second paragraph in the blockquote.
     >
     > ## This is an H2 in a blockquote
 
-
 Output:
 
     <h1>A First Level Header</h1>
-    
+
     <h2>A Second Level Header</h2>
-    
+
     <p>Now is the time for all good men to come to
     the aid of their country. This is just a
     regular paragraph.</p>
-    
+
     <p>The quick brown fox jumped over the lazy
     dog's back.</p>
-    
+
     <h3>Header 3</h3>
-    
+
     <blockquote>
         <p>This is a blockquote.</p>
-        
+
         <p>This is the second paragraph in the blockquote.</p>
-        
+
         <h2>This is an H2 in a blockquote</h2>
     </blockquote>
 
-
-
-### Phrase Emphasis ###
+### Phrase Emphasis
 
 Markdown uses asterisks and underscores to indicate spans of emphasis.
 
@@ -95,7 +91,7 @@ Markdown:
 
     Some of these words *are emphasized*.
     Some of these words _are emphasized also_.
-    
+
     Use two asterisks for **strong emphasis**.
     Or, if you prefer, __use two underscores instead__.
 
@@ -103,13 +99,11 @@ Output:
 
     <p>Some of these words <em>are emphasized</em>.
     Some of these words <em>are emphasized also</em>.</p>
-    
+
     <p>Use two asterisks for <strong>strong emphasis</strong>.
     Or, if you prefer, <strong>use two underscores instead</strong>.</p>
-   
 
-
-## Lists ##
+## Lists
 
 Unordered (bulleted) lists use asterisks, pluses, and hyphens (`*`,
 `+`, and `-`) as list markers. These three markers are
@@ -159,7 +153,7 @@ list item text. You can create multi-paragraph list items by indenting
 the paragraphs by 4 spaces or 1 tab:
 
     *   A list item.
-    
+
         With multiple paragraphs.
 
     *   Another item in the list.
@@ -171,13 +165,11 @@ Output:
     <p>With multiple paragraphs.</p></li>
     <li><p>Another item in the list.</p></li>
     </ul>
-    
 
+### Links
 
-### Links ###
-
-Markdown supports two styles for creating links: *inline* and
-*reference*. With both styles, you use square brackets to delimit the
+Markdown supports two styles for creating links: _inline_ and
+_reference_. With both styles, you use square brackets to delimit the
 text you want to turn into a link.
 
 Inline-style links use parentheses immediately after the link text.
@@ -217,7 +209,7 @@ Output:
     title="MSN Search">MSN</a>.</p>
 
 The title attribute is optional. Link names may contain letters,
-numbers and spaces, but are *not* case sensitive:
+numbers and spaces, but are _not_ case sensitive:
 
     I start my morning with a cup of coffee and
     [The New York Times][NY Times].
@@ -229,7 +221,7 @@ Output:
     <p>I start my morning with a cup of coffee and
     <a href="http://www.nytimes.com/">The New York Times</a>.</p>
 
-### Images ###
+### Images
 
 Image syntax is very much like link syntax.
 
@@ -247,8 +239,7 @@ Both of the above examples produce the same output:
 
     <img src="/path/to/img.jpg" alt="alt text" title="Title" />
 
-
-### Code ###
+### Code
 
 In a regular paragraph, you can create code span by wrapping text in
 backtick quotes. Any ampersands (`&`) and angle brackets (`<` or
@@ -264,11 +255,10 @@ Output:
 
     <p>I strongly recommend against using any
     <code>&lt;blink&gt;</code> tags.</p>
-    
+
     <p>I wish SmartyPants used named entities like
     <code>&amp;mdash;</code> instead of decimal-encoded
     entites like <code>&amp;#8212;</code>.</p>
-
 
 To specify an entire block of pre-formatted code, indent every line of
 the block by 4 spaces or 1 tab. Just like with code spans, `&`, `<`,
@@ -287,7 +277,7 @@ Output:
 
     <p>If you want your page to validate under XHTML 1.0 Strict,
     you've got to put paragraph tags in your blockquotes:</p>
-    
+
     <pre><code>&lt;blockquote&gt;
         &lt;p&gt;For example.&lt;/p&gt;
     &lt;/blockquote&gt;

@@ -1,7 +1,7 @@
-import { cp } from "node:fs/promises"
-import { resolve } from "node:path"
-import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { cp } from "node:fs/promises";
+import { resolve } from "node:path";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   define: {
@@ -16,9 +16,9 @@ export default defineConfig({
     {
       name: "barkdown-extension-assets",
       async closeBundle() {
-        await cp("manifest.json", "extension-dist/manifest.json")
-        await cp("images", "extension-dist/images", { recursive: true })
-        await cp("src/background.js", "extension-dist/background.js")
+        await cp("manifest.json", "extension-dist/manifest.json");
+        await cp("images", "extension-dist/images", { recursive: true });
+        await cp("src/background.js", "extension-dist/background.js");
       },
     },
   ],
@@ -46,8 +46,9 @@ export default defineConfig({
     outDir: "extension-dist",
     rollupOptions: {
       output: {
-        assetFileNames: (asset) => asset.name?.endsWith(".css") ? "style.css" : "assets/[name][extname]",
+        assetFileNames: (asset) =>
+          asset.name?.endsWith(".css") ? "style.css" : "assets/[name][extname]",
       },
     },
   },
-})
+});

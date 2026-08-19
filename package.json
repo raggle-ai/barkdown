@@ -1,11 +1,13 @@
 {
-	"name": "barkdown-workspace",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"build": "pnpm --filter @raggle-ai/barkdown build",
-		"test": "pnpm --filter @raggle-ai/barkdown test",
-		"typecheck": "pnpm --filter @raggle-ai/barkdown typecheck",
-		"extension:dist": "pnpm --filter @raggle-ai/barkdown-extension extension:dist"
-	}
+  "name": "barkdown-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter @raggle-ai/barkdown build",
+    "format": "pnpm dlx prettier@^3.7.4 . --check",
+    "format:fix": "pnpm dlx prettier@^3.7.4 . --write",
+    "test": "pnpm --filter @raggle-ai/barkdown test",
+    "typecheck": "pnpm --filter @raggle-ai/barkdown typecheck",
+    "extension:dist": "pnpm --filter @raggle-ai/barkdown-extension extension:dist"
+  }
 }

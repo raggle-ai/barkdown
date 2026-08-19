@@ -34,6 +34,7 @@ flowchart LR
 ## 3. Flowchart Direction Variants
 
 ### Top to Bottom (TB)
+
 ```mermaid
 flowchart TB
     User --> Frontend
@@ -42,6 +43,7 @@ flowchart TB
 ```
 
 ### Left to Right (LR)
+
 ```mermaid
 flowchart LR
     Input --> Process --> Output
@@ -56,7 +58,7 @@ sequenceDiagram
     participant Browser
     participant Server
     participant Database
-    
+
     Browser->>Server: HTTP Request
     activate Server
     Server->>Database: Query Data
@@ -75,14 +77,14 @@ sequenceDiagram
     participant App
     participant Auth
     participant API
-    
+
     User->>App: Login Request
     App->>Auth: Validate Credentials
-    
+
     alt Valid Credentials
         Auth-->>App: Token
         App-->>User: Login Success
-        
+
         loop Every 5 minutes
             App->>API: Refresh Token
             API-->>App: New Token
@@ -91,7 +93,7 @@ sequenceDiagram
         Auth-->>App: Error
         App-->>User: Login Failed
     end
-    
+
     Note over User,API: This shows authentication flow
 ```
 
@@ -104,23 +106,23 @@ classDiagram
     Animal <|-- Duck
     Animal <|-- Fish
     Animal <|-- Zebra
-    
+
     Animal : +int age
     Animal : +String gender
     Animal: +isMammal()
     Animal: +mate()
-    
+
     class Duck{
         +String beakColor
         +swim()
         +quack()
     }
-    
+
     class Fish{
         -int sizeInFeet
         -canEat()
     }
-    
+
     class Zebra{
         +bool is_wild
         +run()
@@ -180,20 +182,20 @@ Project timeline visualization:
 gantt
     title Project Development Timeline
     dateFormat YYYY-MM-DD
-    
+
     section Planning
     Requirements     :done, req, 2024-01-01, 7d
     Design           :done, des, after req, 10d
-    
+
     section Development
     Backend API      :active, api, 2024-01-18, 14d
     Frontend UI      :ui, after api, 14d
     Integration      :int, after ui, 7d
-    
+
     section Testing
     Unit Tests       :test1, after int, 5d
     Integration Tests:test2, after test1, 5d
-    
+
     section Deployment
     Staging          :stage, after test2, 3d
     Production       :prod, after stage, 2d
@@ -343,21 +345,21 @@ flowchart TD
         A[React App] --> B[Redux Store]
         B --> C[Components]
     end
-    
+
     subgraph Backend
         D[Express Server] --> E[Controllers]
         E --> F[Services]
     end
-    
+
     subgraph Database
         G[(PostgreSQL)]
         H[(Redis Cache)]
     end
-    
+
     C --> D
     F --> G
     F --> H
-    
+
     style A fill:#61dafb,stroke:#333
     style D fill:#68a063,stroke:#333
     style G fill:#336791,stroke:#333,color:#fff

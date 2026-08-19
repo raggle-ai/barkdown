@@ -32,13 +32,13 @@ inline Unicode emoji.
 
 ### More emoji
 
-| Category | Examples |
-| --- | --- |
-| Faces | Grin, joy, heart eyes, thinking, sunglasses |
-| Animals | Dog, cat, unicorn, butterfly, fox |
-| Food | Apple, burger, cake, beer, wine |
-| Nature | Sun, rainbow, snowflake, fire, ocean |
-| Objects | Computer, phone, camera, scissors, wrench |
+| Category | Examples                                    |
+| -------- | ------------------------------------------- |
+| Faces    | Grin, joy, heart eyes, thinking, sunglasses |
+| Animals  | Dog, cat, unicorn, butterfly, fox           |
+| Food     | Apple, burger, cake, beer, wine             |
+| Nature   | Sun, rainbow, snowflake, fire, ocean        |
+| Objects  | Computer, phone, camera, scissors, wrench   |
 
 ---
 
@@ -105,15 +105,15 @@ def quicksort(items):
 
 ## Tables
 
-| Feature | Status | Priority |
-| --- | --- | --- |
-| Copy button | :white_check_mark: Done | High |
-| Emoji | :white_check_mark: Done | High |
-| GFM table | :white_check_mark: Done | High |
-| Task list | :white_check_mark: Done | Medium |
-| Escaped HTML | :white_check_mark: Done | High |
-| Mermaid diagrams | Not enabled | Medium |
-| KaTeX math | Not enabled | Medium |
+| Feature          | Status                  | Priority |
+| ---------------- | ----------------------- | -------- |
+| Copy button      | :white_check_mark: Done | High     |
+| Emoji            | :white_check_mark: Done | High     |
+| GFM table        | :white_check_mark: Done | High     |
+| Task list        | :white_check_mark: Done | Medium   |
+| Escaped HTML     | :white_check_mark: Done | High     |
+| Mermaid diagrams | Not enabled             | Medium   |
+| KaTeX math       | Not enabled             | Medium   |
 
 ---
 
@@ -136,7 +136,9 @@ External links should stay normal:
 Raw HTML is not executed by the React Markdown renderer. This is intentional.
 
 ```html
-<script>alert("This must not run");</script>
+<script>
+  alert("This must not run");
+</script>
 ```
 
 ---
@@ -150,13 +152,7 @@ Raw HTML is not executed by the React Markdown renderer. This is intentional.
 > :bulb: Tip: Keep test documents aligned with the renderer that displays them.
 
 ```javascript
-const features = [
-  "copyButton",
-  "emoji",
-  "gfmTables",
-  "taskLists",
-  "safeHtml",
-];
+const features = ["copyButton", "emoji", "gfmTables", "taskLists", "safeHtml"];
 
 console.log(`${features.length} features covered`);
 ```
