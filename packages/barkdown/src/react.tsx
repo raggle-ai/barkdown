@@ -39,12 +39,15 @@ export type BarkdownCodeProps = ComponentProps<"code"> & {
 	inline?: boolean;
 };
 
+export type BarkdownMarkdownComponents = Record<string, ComponentType<any>>;
+
 export type BarkdownMarkdownProps = {
 	value: string;
 	className?: string;
 	collapsibleHeadings?: boolean;
-	components?: MarkdownComponents;
+	components?: BarkdownMarkdownComponents;
 	copyCode?: boolean;
+	htmlEmbed?: (path: string) => string | undefined;
 	style?: CSSProperties;
 };
 
@@ -75,12 +78,13 @@ export function BarkdownMarkdown({
 	collapsibleHeadings = false,
 	components,
 	copyCode = true,
+	htmlEmbed,
 	style,
 	value
 }: BarkdownMarkdownProps) {
 	const mergedComponents = useMemo<MarkdownComponents>(() => {
 		const merged = {
-			code: (props: BarkdownCodeProps) => <CodeBlock copy={copyCode} {...props} />,
+			code: (props: BarkdownCodeProps) => <CodeBlock copy={copyCode} htmlEmbed={htmlEmbed} {...props} />,
 			pre: (props: ComponentProps<"pre">) => <PreBlock {...props} />,
 			...components
 		};
@@ -91,7 +95,7 @@ export function BarkdownMarkdown({
 			return { [COLLAPSIBLE_SECTION_TAG]: CollapsibleSection, ...merged } as MarkdownComponents;
 		}
 		return merged;
-	}, [collapsibleHeadings, components, copyCode]);
+	}, [collapsibleHeadings, components, copyCode, htmlEmbed]);
 
 	const rehypePlugins = useMemo(
 		() =>
@@ -186,7 +190,9 @@ function CollapsibleSection({ children }: CollapsibleSectionProps) {
 function PreBlock({ children, ...props }: ComponentProps<"pre">) {
 	if (
 		isValidElement<{ className?: string }>(children) &&
-		children.props.className?.split(/\s+/).includes("language-mermaid")
+		children.props.className?.split(/\s+/).some((className) =>
+			className === "language-mermaid" || className === "language-barkdown-html"
+		)
 	) {
 		return children;
 	}
@@ -267,9 +273,13 @@ export function CodeBlock({
 	children,
 	className,
 	copy = true,
+	htmlEmbed,
 	inline,
 	...props
-}: BarkdownCodeProps & { copy?: boolean }) {
+}: BarkdownCodeProps & {
+	copy?: boolean;
+	htmlEmbed?: (path: string) => string | undefined;
+}) {
 	const [copied, setCopied] = useState(false);
 	const text = String(children ?? "").replace(/\n$/, "");
 	const language = /(?:^|\s)language-([\w+-]+)/.exec(className ?? "")?.[1]?.toLowerCase();
@@ -277,6 +287,24 @@ export function CodeBlock({
 
 	if (language === "mermaid") {
 		return <BarkdownMermaid diagram={text} />;
+	}
+	if (language === "barkdown-html") {
+		const path = text.trim();
+		const source = path && !path.includes("\n") ? htmlEmbed?.(path) : undefined;
+		if (!source) {
+			return <span data-barkdown-html-embed-error="">HTML visualization not found: {path || "missing path"}</span>;
+		}
+		const filename = path.split("/").at(-1) ?? path;
+		const title = filename.replace(/\.html?$/i, "").replaceAll(/[-_]/g, " ");
+		return (
+			<iframe
+				data-barkdown-html-embed=""
+				loading="lazy"
+				sandbox="allow-scripts"
+				srcDoc={source}
+				title={title}
+			/>
+		);
 	}
 
 	if (!block) {

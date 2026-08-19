@@ -4,6 +4,7 @@ export {
 	BarkdownMdx,
 	CodeBlock,
 	type BarkdownCodeProps,
+	type BarkdownMarkdownComponents,
 	type BarkdownContentProps,
 	type BarkdownMarkdownProps,
 	type BarkdownMdxProps,

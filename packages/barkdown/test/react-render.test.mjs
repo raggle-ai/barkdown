@@ -188,3 +188,27 @@ test("collapsibleHeadings handles duplicate heading text with unique IDs", () =>
   assert.match(html, /id="notes"/)
   assert.match(html, /id="notes-1"/)
 })
+
+test("BarkdownMarkdown renders a separate HTML document inline", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: [
+        "# Architecture",
+        "",
+        "```barkdown-html",
+        "visualizations/ownership.html",
+        "```",
+      ].join("\n"),
+      htmlEmbed(path) {
+        if (path !== "visualizations/ownership.html") return undefined
+        return "<button>Show details</button><script>document.querySelector('button').onclick=()=>document.body.dataset.open='yes'</script>"
+      },
+    }),
+  )
+
+  assert.match(html, /data-barkdown-html-embed=""/)
+  assert.match(html, /title="ownership"/)
+  assert.match(html, /sandbox="allow-scripts"/)
+  assert.match(html, /srcDoc="&lt;button&gt;Show details/)
+  assert.doesNotMatch(html, /<pre><iframe/)
+})

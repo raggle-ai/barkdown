@@ -1,4 +1,4 @@
-import type { AnchorHTMLAttributes, MouseEvent } from "react"
+import type { AnchorHTMLAttributes, ComponentType, MouseEvent } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
   ChevronDown,
@@ -68,6 +68,16 @@ export const documentTitle = (path: string) => {
 export const folderName = (path: string) => {
   const clean = path.replace(/[\\/]+$/, "")
   return clean.split(/[\\/]/).at(-1) || path
+}
+
+export const resolveEmbeddedHtmlPath = (
+  markdownPath: string,
+  htmlPath: string,
+) => {
+  const base = markdownPath.split("/").slice(0, -1).join("/")
+  const baseUrl = `https://barkdown.local/${base ? `${base}/` : ""}`
+
+  return new URL(htmlPath, baseUrl).pathname.slice(1)
 }
 
 function tree(documents: BarkdownDocument[]) {
@@ -158,13 +168,6 @@ export function BarkdownExplorer({
   }, [])
 
   const document = data?.documents.find((item) => item.path === selected)
-  const content = useMemo(
-    () =>
-      document?.kind === "markdown"
-        ? metadata(document.content)
-        : { body: document?.content ?? "", entries: [] },
-    [document],
-  )
   const filtered = useMemo(() => {
     const value = query.trim().toLowerCase()
     if (!value) return data?.documents ?? []
@@ -360,26 +363,11 @@ export function BarkdownExplorer({
               }
               tabIndex={-1}
             >
-              {content.entries.length ? (
-                <Frontmatter entries={content.entries} />
-              ) : null}
-              {document.kind === "html" ? (
-                <iframe
-                  className="html-document"
-                  sandbox=""
-                  srcDoc={document.content}
-                  title={documentTitle(document.path)}
-                />
-              ) : document.kind === "markdown" ? (
-                <BarkdownContent
-                  collapsibleHeadings
-                  mode="markdown"
-                  value={content.body}
-                  components={{ a: relativeLink }}
-                />
-              ) : (
-                <pre className="text-document">{document.content}</pre>
-              )}
+              <DocumentContent
+                document={document}
+                documents={data?.documents}
+                linkComponent={relativeLink}
+              />
             </article>
           </>
         ) : (
@@ -528,5 +516,112 @@ function Empty({ loading, error }: { loading: boolean; error: string }) {
           : error || "Add a Markdown, HTML, or text file and refresh the page."}
       </p>
     </div>
+  )
+}
+
+export type BarkdownDocumentProps = {
+  className?: string
+  path?: string
+  source: BarkdownSource
+}
+
+export function BarkdownDocument({
+  className,
+  path,
+  source,
+}: BarkdownDocumentProps) {
+  const [data, setData] = useState<BarkdownDataset>()
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    let active = true
+    void source
+      .read()
+      .then((result) => {
+        if (!active) return
+        setData(result)
+        setError("")
+      })
+      .catch((reason: unknown) => {
+        if (!active) return
+        setError(
+          reason instanceof Error ? reason.message : "Could not load file.",
+        )
+      })
+    return () => {
+      active = false
+    }
+  }, [source])
+
+  const document = useMemo(() => {
+    if (!data) return undefined
+    if (path) return data.documents.find((item) => item.path === path)
+    return (
+      data.documents.find((item) => item.path.toLowerCase() === "readme.md") ??
+      data.documents[0]
+    )
+  }, [data, path])
+
+  if (error) return <p className="barkdown-document-error">{error}</p>
+  if (!data) return <p className="barkdown-document-loading">Loading file…</p>
+  if (!document)
+    return <p className="barkdown-document-empty">No document found.</p>
+
+  return (
+    <div className={className}>
+      <DocumentContent document={document} documents={data.documents} />
+    </div>
+  )
+}
+
+type DocumentContentProps = {
+  document: BarkdownDocument
+  documents?: BarkdownDocument[]
+  linkComponent?: ComponentType<AnchorHTMLAttributes<HTMLAnchorElement>>
+}
+
+function DocumentContent({
+  document,
+  documents,
+  linkComponent,
+}: DocumentContentProps) {
+  const content =
+    document.kind === "markdown"
+      ? metadata(document.content)
+      : { body: document.content, entries: [] }
+
+  return (
+    <article
+      className={
+        document.kind === "html" ? "document is-html" : "document"
+      }
+      tabIndex={-1}
+    >
+      {content.entries.length ? <Frontmatter entries={content.entries} /> : null}
+      {document.kind === "html" ? (
+        <iframe
+          className="html-document"
+          sandbox=""
+          srcDoc={document.content}
+          title={documentTitle(document.path)}
+        />
+      ) : document.kind === "markdown" ? (
+        <BarkdownContent
+          collapsibleHeadings
+          mode="markdown"
+          value={content.body}
+          components={linkComponent ? { a: linkComponent } : undefined}
+          htmlEmbed={(path) => {
+            const resolved = resolveEmbeddedHtmlPath(document.path, path)
+            const embedded = documents?.find(
+              (item) => item.kind === "html" && item.path === resolved,
+            )
+            return embedded?.content
+          }}
+        />
+      ) : (
+        <pre className="text-document">{document.content}</pre>
+      )}
+    </article>
   )
 }

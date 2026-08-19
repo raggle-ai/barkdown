@@ -1,6 +1,6 @@
 {
 	"name": "@raggle-ai/barkdown",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Markdown, HTML, and folder explorer modules for BarkDown.",
 	"license": "MIT",
 	"type": "module",
