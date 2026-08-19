@@ -1,5 +1,6 @@
 export {
   BarkdownContent,
+  BarkdownLink,
   BarkdownMarkdown,
   BarkdownMdx,
   CodeBlock,

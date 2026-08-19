@@ -132,6 +132,16 @@
   text-underline-offset: 2px;
 }
 
+[data-barkdown] a .barkdown-link-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin: 0 0.35em -0.12em 0;
+  vertical-align: baseline;
+  border-radius: 3px;
+  object-fit: contain;
+}
+
 [data-barkdown] hr {
   width: 100%;
   border: 0;

@@ -1,4 +1,9 @@
-import type { AnchorHTMLAttributes, ComponentType, MouseEvent } from "react";
+import type {
+  AnchorHTMLAttributes,
+  ComponentType,
+  MouseEvent,
+  ReactNode,
+} from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
@@ -40,6 +45,8 @@ export type BarkdownSource = {
 
 export type BarkdownExplorerProps = {
   brand?: string;
+  sidebarTools?: ReactNode;
+  showLinkIcons?: boolean;
   source: BarkdownSource;
 };
 
@@ -112,6 +119,8 @@ function metadata(content: string): Metadata {
 
 export function BarkdownExplorer({
   brand = "Barkdown",
+  sidebarTools,
+  showLinkIcons = true,
   source,
 }: BarkdownExplorerProps) {
   const [data, setData] = useState<BarkdownDataset>();
@@ -197,6 +206,7 @@ export function BarkdownExplorer({
   const relativeLink = ({
     href,
     onClick,
+    children,
     ...props
   }: AnchorHTMLAttributes<HTMLAnchorElement>) => {
     const handle = (event: MouseEvent<HTMLAnchorElement>) => {
@@ -215,7 +225,21 @@ export function BarkdownExplorer({
       open(resolved);
     };
 
-    return <a {...props} href={href} onClick={handle} />;
+    return (
+      <a {...props} href={href} onClick={handle}>
+        {showLinkIcons && href && /^https?:\/\//i.test(href) ? (
+          <img
+            alt=""
+            className="barkdown-link-icon"
+            height={16}
+            loading="lazy"
+            src={`https://www.google.com/s2/favicons?domain=${new URL(href).hostname}&sz=32`}
+            width={16}
+          />
+        ) : null}
+        {children}
+      </a>
+    );
   };
 
   return (
@@ -316,6 +340,8 @@ export function BarkdownExplorer({
             />
           ) : null}
         </nav>
+
+        {sidebarTools}
 
         {openRoot ? (
           <button

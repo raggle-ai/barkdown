@@ -31,6 +31,10 @@ input {
   font: inherit;
 }
 
+select {
+  font: inherit;
+}
+
 button {
   color: inherit;
 }
@@ -346,6 +350,145 @@ button.root-path:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.barkdown-theme {
+  min-height: 100vh;
+  color: #0d0d0d;
+  background: #f7f7f8;
+}
+
+.barkdown-theme-warm .shell,
+.barkdown-theme-warm .workspace {
+  background: #fbf3e6;
+}
+
+.barkdown-theme-warm .sidebar,
+.barkdown-theme-warm .document-header {
+  background: #f5ead8;
+}
+
+.barkdown-theme-warm .document {
+  background: #fffaf1;
+}
+
+.barkdown-theme-sage .shell,
+.barkdown-theme-sage .workspace {
+  background: #eef3ed;
+}
+
+.barkdown-theme-sage .sidebar,
+.barkdown-theme-sage .document-header {
+  background: #e4ebe1;
+}
+
+.barkdown-theme-sage .document {
+  background: #fbfdf9;
+}
+
+.barkdown-theme-dark {
+  color: #eceee8;
+  background: #151712;
+}
+
+.barkdown-theme-dark .shell,
+.barkdown-theme-dark .workspace {
+  background: #151712;
+}
+
+.barkdown-theme-dark .sidebar,
+.barkdown-theme-dark .document-header {
+  border-color: #2e332a;
+  background: #1c2018;
+}
+
+.barkdown-theme-dark .brand-copy span,
+.barkdown-theme-dark .root-path,
+.barkdown-theme-dark .breadcrumbs,
+.barkdown-theme-dark .file small,
+.barkdown-theme-dark .sidebar-message {
+  color: #aeb5a8;
+}
+
+.barkdown-theme-dark .document {
+  background: #1f231b;
+  color: #eceee8;
+}
+
+.barkdown-theme-dark .search input,
+.barkdown-theme-dark .search kbd {
+  border-color: #373d31;
+  background: #171a14;
+  color: #eceee8;
+}
+
+.barkdown-theme-dark .file,
+.barkdown-theme-dark .files summary {
+  color: #d7dcd0;
+}
+
+.barkdown-theme-dark .file:hover,
+.barkdown-theme-dark .files summary:hover,
+.barkdown-theme-dark .file.is-selected {
+  background: #2b3428;
+  color: #f4f6f0;
+}
+
+.barkdown-options {
+  border-top: 1px solid #deddd7;
+  color: #30332f;
+  padding: 10px 12px;
+}
+
+.barkdown-options summary {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  border-radius: 8px;
+  color: #60635e;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  list-style: none;
+  padding: 0 8px;
+}
+
+.barkdown-options summary:hover {
+  background: #e5e4de;
+  color: #30332f;
+}
+
+.barkdown-options summary::-webkit-details-marker {
+  display: none;
+}
+
+.barkdown-options-panel {
+  display: grid;
+  gap: 10px;
+  padding: 8px;
+}
+
+.barkdown-options-panel label {
+  display: grid;
+  gap: 6px;
+  color: #50534d;
+  font-size: 12px;
+}
+
+.barkdown-options-panel label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.barkdown-options-panel select {
+  width: 100%;
+  border: 1px solid #d7d6d0;
+  border-radius: 8px;
+  background: #f7f6f2;
+  color: #30332f;
+  padding: 7px 8px;
 }
 
 .workspace {

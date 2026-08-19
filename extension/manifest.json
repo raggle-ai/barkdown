@@ -13,8 +13,26 @@
   },
   "content_scripts": [
     {
+      "matches": ["file:///*"],
+      "css": ["style.css"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    },
+    {
       "matches": [
-        "file:///*",
+        "file:///*.md",
+        "file:///*.MD",
+        "file:///*.markdown",
+        "file:///*.MARKDOWN",
+        "file:///*.text",
+        "file:///*.TEXT",
+        "file:///*.txt",
+        "file:///*.TXT"
+      ],
+      "css": ["style.css"]
+    },
+    {
+      "matches": [
         "*://*/*.md",
         "*://*/*.MD",
         "*://raw.githubusercontent.com/*"
@@ -27,7 +45,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["nativeMessaging"],
+  "permissions": ["nativeMessaging", "storage"],
   "host_permissions": ["file:///*"],
   "action": {
     "default_icon": {
