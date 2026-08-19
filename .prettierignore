@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+extension/extension-dist/
+packages/barkdown/dist/
+
+# Local tooling output
+.playwright-cli/
+
+# Auto-generated lockfile
+pnpm-lock.yaml

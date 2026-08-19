@@ -13,7 +13,7 @@ entity      Entity      as Foo4
 database    Database    as Foo5
 collections Collections as Foo6
 queue       Queue       as Foo7
-Foo -> Foo1 : To actor 
+Foo -> Foo1 : To actor
 Foo -> Foo2 : To boundary
 Foo -> Foo3 : To control
 Foo -> Foo4 : To entity
@@ -62,16 +62,16 @@ actor foo1
 actor foo2
 foo1 <-0-> foo2
 foo1 <-(0)-> foo2
- 
+
 (ac1) -le(0)-> left1
 ac1 -ri(0)-> right1
 ac1 .up(0).> up1
 ac1 ~up(0)~> up2
 ac1 -do(0)-> down1
 ac1 -do(0)-> down2
- 
+
 actor1 -0)- actor2
- 
+
 component comp1
 component comp2
 comp1 *-0)-+ comp2

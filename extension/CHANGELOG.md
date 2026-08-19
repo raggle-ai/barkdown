@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Rebranded to BarkDown - "Your markdown's best friend"
 - New warm, friendly branding aligned with Raggle's dog-themed identity
 
 ### Changed
+
 - Updated all documentation and references to reflect BarkDown branding
 - Reorganized documentation with separate CHANGELOG.md and docs/WIKI.md
 
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.8.11] - Previous Release
 
 ### Features
+
 - Auto-reload support for live preview
 - External CSS file support
 - Per-file theme customization
@@ -45,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PDF export
 
 ### Supported File Extensions
+
 - `.md`
 - `.markdown`
 - `.mdown`

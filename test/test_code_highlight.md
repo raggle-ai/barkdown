@@ -1,12 +1,11 @@
-
-## SQL ##
+## SQL
 
 ```sql
 -- comment
 select * from books where id=1;
 ```
 
-## php ##
+## php
 
 ```php
 <?php
@@ -27,21 +26,23 @@ if ('plain' == $text) {
 
 ```
 
-### html ###
+### html
 
 ```html
-<link rel="stylesheet" href="/path/to/styles/default.css">
+<link rel="stylesheet" href="/path/to/styles/default.css" />
 <script src="/path/to/highlight.pack.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
+<script>
+  hljs.initHighlightingOnLoad();
+</script>
 ```
 
-### plaintext ###
+### plaintext
 
 ```text
 -rw-r--r-- 1 root root ...
 ```
 
-### c ###
+### c
 
 ```c
 int main(int argc, char *argv[]) {
@@ -51,7 +52,7 @@ int main(int argc, char *argv[]) {
 
 ```
 
-### cpp ###
+### cpp
 
 ```cpp
 int main(int argc, char *argv[]) {

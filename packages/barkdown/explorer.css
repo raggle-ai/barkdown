@@ -433,8 +433,14 @@ button.root-path:hover {
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font: 0.94rem/1.7 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", monospace;
+  font:
+    0.94rem/1.7 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
   color: var(--ink);
 }
 

@@ -1,86 +1,86 @@
 {
-	"name": "@raggle-ai/barkdown",
-	"version": "0.2.1",
-	"description": "Markdown, HTML, and folder explorer modules for BarkDown.",
-	"license": "MIT",
-	"type": "module",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/raggle-ai/barkdown.git",
-		"directory": "packages/barkdown"
-	},
-	"main": "./dist/index.js",
-	"types": "./dist/index.d.ts",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
-		},
-		"./vitepress": {
-			"types": "./dist/vitepress.d.ts",
-			"import": "./dist/vitepress.js"
-		},
-		"./explorer": {
-			"types": "./dist/explorer.d.ts",
-			"import": "./dist/explorer.js"
-		},
-		"./documents": {
-			"types": "./dist/documents.d.ts",
-			"import": "./dist/documents.js"
-		},
-		"./node": {
-			"types": "./dist/node.d.ts",
-			"import": "./dist/node.js"
-		},
-		"./vite": {
-			"types": "./dist/vite.d.ts",
-			"import": "./dist/vite.js"
-		},
-		"./styles.css": "./styles.css",
-		"./explorer.css": "./explorer.css"
-	},
-	"files": [
-		"dist",
-		"README.md",
-		"styles.css",
-		"explorer.css"
-	],
-	"publishConfig": {
-		"access": "public",
-		"registry": "https://registry.npmjs.org"
-	},
-	"dependencies": {
-		"@mdx-js/mdx": "^3.1.1",
-		"gemoji": "^8.1.0",
-		"highlight.js": "^11.11.1",
-		"katex": "^0.18.1",
-		"lucide-react": "^1.21.0",
-		"mermaid": "^11.16.0",
-		"react-markdown": "^10.1.0",
-		"rehype-highlight": "^7.0.2",
-		"rehype-katex": "^7.0.1",
-		"remark-gfm": "^4.0.1",
-		"remark-math": "^6.0.0",
-		"yaml": "^2.9.0"
-	},
-	"peerDependencies": {
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0",
-		"vue": "^3.5.0"
-	},
-	"scripts": {
-		"build": "tsc -p tsconfig.json",
-		"test": "pnpm build && node --test test/*.test.mjs",
-		"typecheck": "tsc -p tsconfig.json --noEmit"
-	},
-	"devDependencies": {
-		"@types/node": "^22.13.4",
-		"@types/react": "^19.2.2",
-		"@types/react-dom": "^19.0.0",
-		"jsdom": "^30.0.1",
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0",
-		"typescript": "^5.9.3",
-		"vue": "^3.5.13"
-	}
+  "name": "@raggle-ai/barkdown",
+  "version": "0.2.1",
+  "description": "Markdown, HTML, and folder explorer modules for BarkDown.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raggle-ai/barkdown.git",
+    "directory": "packages/barkdown"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vitepress": {
+      "types": "./dist/vitepress.d.ts",
+      "import": "./dist/vitepress.js"
+    },
+    "./explorer": {
+      "types": "./dist/explorer.d.ts",
+      "import": "./dist/explorer.js"
+    },
+    "./documents": {
+      "types": "./dist/documents.d.ts",
+      "import": "./dist/documents.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js"
+    },
+    "./styles.css": "./styles.css",
+    "./explorer.css": "./explorer.css"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "styles.css",
+    "explorer.css"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "dependencies": {
+    "@mdx-js/mdx": "^3.1.1",
+    "gemoji": "^8.1.0",
+    "highlight.js": "^11.11.1",
+    "katex": "^0.18.1",
+    "lucide-react": "^1.21.0",
+    "mermaid": "^11.16.0",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "yaml": "^2.9.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "vue": "^3.5.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "pnpm build && node --test test/*.test.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.0.0",
+    "jsdom": "^30.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.9.3",
+    "vue": "^3.5.13"
+  }
 }

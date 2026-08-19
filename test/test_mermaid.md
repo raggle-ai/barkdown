@@ -10,7 +10,6 @@ graph TD;
     C-->D;
 ```
 
-
 ## Sequence diagram
 
 ```mermaid
