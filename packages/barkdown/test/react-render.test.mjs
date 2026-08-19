@@ -209,3 +209,33 @@ test("BarkdownMarkdown renders a separate HTML document inline", () => {
   assert.match(html, /srcDoc="&lt;button&gt;Show details/);
   assert.doesNotMatch(html, /<pre><iframe/);
 });
+
+test("BarkdownMarkdown renders a favicon for external links", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value:
+        "[GitHub](https://github.com/raggle-ai/barkdown) and [page](/local/page)",
+    }),
+  );
+
+  assert.match(html, /class="barkdown-link-icon"/);
+  assert.match(
+    html,
+    /src="https:\/\/www\.google\.com\/s2\/favicons\?domain=github\.com/,
+  );
+  // Relative links get no icon
+  assert.equal(html.match(/class="barkdown-link-icon"/g).length, 1);
+  assert.match(html, /<a href="\/local\/page"[^>]*>page<\/a>/);
+});
+
+test("BarkdownMarkdown linkIcons=false skips favicon rendering", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: "[GitHub](https://github.com)",
+      linkIcons: false,
+    }),
+  );
+
+  assert.doesNotMatch(html, /barkdown-link-icon/);
+  assert.doesNotMatch(html, /favicons/);
+});
