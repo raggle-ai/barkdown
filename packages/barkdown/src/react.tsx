@@ -51,6 +51,7 @@ export type BarkdownMarkdownProps = {
   components?: BarkdownMarkdownComponents;
   copyCode?: boolean;
   htmlEmbed?: (path: string) => string | undefined;
+  linkIcons?: boolean;
   style?: CSSProperties;
 };
 
@@ -82,11 +83,14 @@ export function BarkdownMarkdown({
   components,
   copyCode = true,
   htmlEmbed,
+  linkIcons = true,
   style,
   value,
 }: BarkdownMarkdownProps) {
   const mergedComponents = useMemo<MarkdownComponents>(() => {
     const merged = {
+      a: (props: ComponentProps<"a">) =>
+        linkIcons ? <BarkdownLink {...props} /> : <a {...props} />,
       code: (props: BarkdownCodeProps) => (
         <CodeBlock copy={copyCode} htmlEmbed={htmlEmbed} {...props} />
       ),
@@ -103,7 +107,7 @@ export function BarkdownMarkdown({
       } as MarkdownComponents;
     }
     return merged;
-  }, [collapsibleHeadings, components, copyCode, htmlEmbed]);
+  }, [collapsibleHeadings, components, copyCode, htmlEmbed, linkIcons]);
 
   const rehypePlugins = useMemo(
     () =>
@@ -227,6 +231,40 @@ function PreBlock({ children, ...props }: ComponentProps<"pre">) {
   }
 
   return <pre {...props}>{children}</pre>;
+}
+
+function faviconUrl(href: string): string | undefined {
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return undefined;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return undefined;
+  return `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=32`;
+}
+
+export function BarkdownLink({
+  children,
+  href,
+  ...props
+}: ComponentProps<"a">) {
+  const icon = href ? faviconUrl(href) : undefined;
+  return (
+    <a href={href} {...props}>
+      {icon ? (
+        <img
+          alt=""
+          className="barkdown-link-icon"
+          height={16}
+          loading="lazy"
+          src={icon}
+          width={16}
+        />
+      ) : null}
+      {children}
+    </a>
+  );
 }
 
 export function BarkdownMdx({

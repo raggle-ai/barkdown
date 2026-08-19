@@ -15,6 +15,6 @@ pnpm extension:dist
 
 Load `extension/extension-dist` as an unpacked extension in Chrome. Enable **Allow access to file URLs**.
 
-Drag a local folder into Chrome to read all supported files in its folder tree. When Chrome opens one Markdown or HTML file, the extension asks the local Kennel bridge to serve its parent folder. Kennel binds this automatic preview to `127.0.0.1`.
+Drag a local folder into Chrome to read all supported files in its folder tree. When Chrome opens one Markdown file, the extension asks the local Kennel bridge to serve its parent folder. Kennel binds this automatic preview to `127.0.0.1`.
 
-BarkDown does not change normal HTML web pages. It only acts on supported local files and the matched preview routes in the manifest.
+BarkDown does not change normal HTML web pages or local HTML files. It only acts on supported local files and the matched preview routes in the manifest.
