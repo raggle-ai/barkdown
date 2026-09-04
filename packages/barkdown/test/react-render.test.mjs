@@ -28,6 +28,27 @@ test("BarkdownMarkdown renders math, highlighted code, and Mermaid containers", 
   assert.doesNotMatch(html, /<pre><figure/);
 });
 
+test("BarkdownMarkdown renders inline HTML formatting", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: "<small><em>Potential quote</em></small>",
+    }),
+  );
+
+  assert.match(html, /<small><em>Potential quote<\/em><\/small>/);
+});
+
+test("BarkdownMarkdown sanitizes unsafe inline HTML", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: '<small onclick="alert(1)">Safe</small><script>alert(1)</script>',
+    }),
+  );
+
+  assert.match(html, /<small>Safe<\/small>/);
+  assert.doesNotMatch(html, /onclick|<script/);
+});
+
 test("collapsibleHeadings wraps content in sections with accessible toggle buttons", () => {
   const value = [
     "## Account",

@@ -17,7 +17,7 @@ export function Preview({ value }: { value: string }) {
 }
 ```
 
-Markdown rendering includes GitHub-flavored Markdown, syntax highlighting, KaTeX formulas, GitHub emoji shortcodes, and fenced Mermaid diagrams. The stylesheet contains their default visual treatment and the code-copy controls. You can override it with normal CSS by targeting `[data-barkdown]` or passing `className`/`style` to the component.
+Markdown rendering includes GitHub-flavored Markdown, sanitized inline HTML, syntax highlighting, KaTeX formulas, GitHub emoji shortcodes, and fenced Mermaid diagrams. The stylesheet contains their default visual treatment and the code-copy controls. You can override it with normal CSS by targeting `[data-barkdown]` or passing `className`/`style` to the component.
 
 Pass `collapsibleHeadings` to turn each heading into a section control. The section contains content until the next heading of the same or a higher level, child sections nest inside their parent, and every heading gets a stable ID. The control is a real button with `aria-expanded` and `aria-controls`, and sections are open by default. The option defaults to off; `BarkdownExplorer` turns it on for full document views.
 

@@ -18,6 +18,8 @@ import ReactMarkdown, {
 } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import * as runtime from "react/jsx-runtime";
@@ -28,6 +30,15 @@ import {
   rehypeCollapsibleHeadings,
 } from "./rehype-collapsible-headings.js";
 import { BarkdownMermaid } from "./react-mermaid.js";
+
+const markdownSchema = {
+  ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames ?? []), "small"],
+};
+const sanitizeMarkdown: [typeof rehypeSanitize, typeof markdownSchema] = [
+  rehypeSanitize,
+  markdownSchema,
+];
 
 function joinClassNames(
   ...values: Array<string | undefined>
@@ -112,8 +123,14 @@ export function BarkdownMarkdown({
   const rehypePlugins = useMemo(
     () =>
       collapsibleHeadings
-        ? [rehypeHighlight, rehypeKatex, rehypeCollapsibleHeadings]
-        : [rehypeHighlight, rehypeKatex],
+        ? [
+            rehypeRaw,
+            sanitizeMarkdown,
+            rehypeHighlight,
+            rehypeKatex,
+            rehypeCollapsibleHeadings,
+          ]
+        : [rehypeRaw, sanitizeMarkdown, rehypeHighlight, rehypeKatex],
     [collapsibleHeadings],
   );
 

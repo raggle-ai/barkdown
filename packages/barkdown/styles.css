@@ -2,6 +2,7 @@
 @import "katex/dist/katex.min.css";
 
 [data-barkdown] {
+  --barkdown-link-color: #0969da;
   min-width: 0;
   color: inherit;
   font: inherit;
@@ -66,6 +67,19 @@
 [data-barkdown] ul,
 [data-barkdown] ol {
   padding-left: 1.2em;
+  list-style-position: outside;
+}
+
+[data-barkdown] ul {
+  list-style-type: disc;
+}
+
+[data-barkdown] ol {
+  list-style-type: decimal;
+}
+
+[data-barkdown] ul.contains-task-list {
+  list-style-type: none;
 }
 
 [data-barkdown] li + li {
@@ -126,7 +140,7 @@
 }
 
 [data-barkdown] a {
-  color: inherit;
+  color: var(--barkdown-link-color);
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 2px;
