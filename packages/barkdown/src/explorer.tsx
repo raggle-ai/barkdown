@@ -12,7 +12,6 @@ import {
   Folder,
   FolderOpen,
   Menu,
-  PanelLeftClose,
   Search,
   X,
 } from "lucide-react";
@@ -285,14 +284,6 @@ export function BarkdownExplorer({
               {data ? `${data.documents.length} documents` : "Document viewer"}
             </span>
           </div>
-          <button
-            className="icon-button desktop-close"
-            type="button"
-            aria-label="Close file browser"
-            onClick={() => setSidebar(false)}
-          >
-            <PanelLeftClose aria-hidden="true" />
-          </button>
           <button
             className="icon-button mobile-close"
             type="button"
