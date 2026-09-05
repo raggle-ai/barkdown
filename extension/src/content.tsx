@@ -37,6 +37,10 @@ function mount(source: BarkdownSource) {
   document.head
     .querySelectorAll("style, link[rel=stylesheet]")
     .forEach((node) => node.remove());
+  const stylesheet = document.createElement("link");
+  stylesheet.rel = "stylesheet";
+  stylesheet.href = chrome.runtime.getURL("style.css");
+  document.head.append(stylesheet);
   document.body.replaceChildren();
   const root = document.createElement("div");
   root.id = "barkdown-root";

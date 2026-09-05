@@ -14,7 +14,6 @@
   "content_scripts": [
     {
       "matches": ["file:///*"],
-      "css": ["style.css"],
       "js": ["content.js"],
       "run_at": "document_end"
     },
@@ -47,6 +46,12 @@
   },
   "permissions": ["nativeMessaging", "storage"],
   "host_permissions": ["file:///*"],
+  "web_accessible_resources": [
+    {
+      "resources": ["style.css"],
+      "matches": ["file:///*"]
+    }
+  ],
   "action": {
     "default_icon": {
       "48": "images/icon-48.png",

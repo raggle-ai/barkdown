@@ -7,11 +7,14 @@ test("the extension runs on local folders", async () => {
     await readFile(new URL("../manifest.json", import.meta.url), "utf8"),
   );
   assert.equal(manifest.content_scripts[0].matches.includes("file:///*"), true);
-  assert.deepEqual(manifest.content_scripts[0].css, ["style.css"]);
+  assert.equal(manifest.content_scripts[0].css, undefined);
   assert.equal(
     manifest.content_scripts[1].matches.includes("file:///*.html"),
     false,
   );
+  assert.deepEqual(manifest.web_accessible_resources, [
+    { resources: ["style.css"], matches: ["file:///*"] },
+  ]);
 });
 
 test("the local folder view does not redirect to Kennel", async () => {
