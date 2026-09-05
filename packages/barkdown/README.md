@@ -2,6 +2,11 @@
 
 The core renderer is published as `@raggle-ai/barkdown` on npm.
 
+BarkDown is maintained by Raggle as an independent project. It was forked from
+[volca/markdown-preview](https://github.com/volca/markdown-preview); see
+[NOTICE.md](https://github.com/raggle-ai/barkdown/blob/master/NOTICE.md) for
+attribution.
+
 ```bash
 pnpm add @raggle-ai/barkdown
 ```
