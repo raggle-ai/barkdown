@@ -21,13 +21,13 @@ test("documentMatches searches file paths and file contents", () => {
 
 test("documentUrl preserves the folder target during document navigation", () => {
   const url = documentUrl(
-    "http://127.0.0.1:5173/?file=/Users/example/client",
+    "http://127.0.0.1:5173/?path=/Users/example/client",
     "meetings/notes.txt",
   );
 
   assert.equal(
     url.href,
-    "http://127.0.0.1:5173/?file=%2FUsers%2Fexample%2Fclient&document=meetings%2Fnotes.txt",
+    "http://127.0.0.1:5173/?path=%2FUsers%2Fexample%2Fclient&file=meetings%2Fnotes.txt",
   );
   assert.equal(documentPath(url.search), "meetings/notes.txt");
 });

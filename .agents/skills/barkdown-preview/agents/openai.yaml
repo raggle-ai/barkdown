@@ -1,0 +1,4 @@
+interface:
+  display_name: "BarkDown Preview"
+  short_description: "Preview BarkDown files on local or mobile browsers"
+  default_prompt: "Use $barkdown-preview to preview a Markdown file on mobile."

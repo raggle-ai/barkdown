@@ -14,9 +14,17 @@ pnpm install
 pnpm typecheck
 pnpm build
 pnpm extension:dist
+pnpm preview <markdown-file>
+pnpm install:global
 ```
 
 `pnpm build` and `pnpm typecheck` run against the public npm package. `pnpm extension:dist` builds the unpacked extension into `extension/extension-dist/`.
+
+`pnpm preview <markdown-file>` starts a LAN preview and prints a phone-safe
+`?file=` link. The phone and computer must use the same local network.
+
+`pnpm install:global` installs a `barkdown` command in `~/.local/bin`, so you
+can run `barkdown <markdown-file>` from any folder.
 
 ## Publishing
 
