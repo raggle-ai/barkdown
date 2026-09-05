@@ -239,3 +239,79 @@ test("BarkdownMarkdown linkIcons=false skips favicon rendering", () => {
   assert.doesNotMatch(html, /barkdown-link-icon/);
   assert.doesNotMatch(html, /favicons/);
 });
+
+test("BarkdownMarkdown linkifies bare local absolute paths as file buttons", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: "See /Users/andrew/LOCAL/Github/raggle-ai-kennel for the source.",
+    }),
+  );
+
+  assert.match(html, /<a [^>]*class="barkdown-path-link"[^>]*>/);
+  assert.match(
+    html,
+    /href="file:\/\/\/Users\/andrew\/LOCAL\/Github\/raggle-ai-kennel"/,
+  );
+  assert.match(html, />\/Users\/andrew\/LOCAL\/Github\/raggle-ai-kennel<\/a>/);
+});
+
+test("BarkdownMarkdown linkLocalPaths=false skips bare local path links", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: "See /Users/andrew/LOCAL/Github/raggle-ai-kennel for the source.",
+      linkLocalPaths: false,
+    }),
+  );
+
+  assert.doesNotMatch(html, /barkdown-path-link/);
+  assert.doesNotMatch(html, /file:\/\/\/Users\/andrew/);
+  assert.match(html, /\/Users\/andrew\/LOCAL\/Github\/raggle-ai-kennel/);
+});
+
+test("BarkdownMarkdown excludes trailing punctuation from the path link", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: "Open /Users/andrew/LOCAL/Github/raggle-ai-kennel.",
+    }),
+  );
+
+  assert.match(
+    html,
+    /href="file:\/\/\/Users\/andrew\/LOCAL\/Github\/raggle-ai-kennel"/,
+  );
+  // Trailing period stays outside the anchor.
+  assert.match(html, /raggle-ai-kennel<\/a>\./);
+});
+
+test("BarkdownMarkdown linkifies paths inside inline code backticks", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value:
+        "The linked source is at `/Users/andrewmaguire/LOCAL/Github/raggle-ai-kennel`.",
+    }),
+  );
+
+  assert.match(html, /class="barkdown-path-link"/);
+  assert.match(
+    html,
+    /href="file:\/\/\/Users\/andrewmaguire\/LOCAL\/Github\/raggle-ai-kennel"/,
+  );
+  // The <code> wrapper is replaced by the <a>, not nested inside it.
+  assert.doesNotMatch(html, /<code[^>]*><a/);
+});
+
+test("BarkdownMarkdown does not linkify paths inside code blocks or existing links", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: [
+        "```",
+        "Run /Users/andrew/bin/tool to build.",
+        "```",
+        "",
+        "See [the project](/Users/andrew/project) for details.",
+      ].join("\n"),
+    }),
+  );
+
+  assert.doesNotMatch(html, /barkdown-path-link/);
+});

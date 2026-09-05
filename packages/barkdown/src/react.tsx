@@ -15,6 +15,7 @@ import {
 } from "react";
 import ReactMarkdown, {
   type Components as MarkdownComponents,
+  defaultUrlTransform,
 } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -27,6 +28,7 @@ import {
   COLLAPSIBLE_SECTION_TAG,
   rehypeCollapsibleHeadings,
 } from "./rehype-collapsible-headings.js";
+import { rehypeLocalPaths } from "./rehype-local-paths.js";
 import { BarkdownMermaid } from "./react-mermaid.js";
 
 function joinClassNames(
@@ -35,6 +37,12 @@ function joinClassNames(
   const className = values.filter(Boolean).join(" ");
   return className || undefined;
 }
+
+// react-markdown's default sanitizer strips protocols it does not recognise.
+// BarkDown links bare local paths to `file:` URLs, so allow that scheme and
+// delegate everything else to the default behaviour.
+const urlTransform = (value: string) =>
+  /^file:/i.test(value) ? value : defaultUrlTransform(value);
 
 export type BarkdownMode = "markdown" | "mdx";
 
@@ -52,6 +60,7 @@ export type BarkdownMarkdownProps = {
   copyCode?: boolean;
   htmlEmbed?: (path: string) => string | undefined;
   linkIcons?: boolean;
+  linkLocalPaths?: boolean;
   style?: CSSProperties;
 };
 
@@ -84,9 +93,13 @@ export function BarkdownMarkdown({
   copyCode = true,
   htmlEmbed,
   linkIcons = true,
+  linkLocalPaths = true,
   style,
   value,
 }: BarkdownMarkdownProps) {
+  type RehypePlugins = NonNullable<
+    ComponentProps<typeof ReactMarkdown>["rehypePlugins"]
+  >;
   const mergedComponents = useMemo<MarkdownComponents>(() => {
     const merged = {
       a: (props: ComponentProps<"a">) =>
@@ -109,12 +122,15 @@ export function BarkdownMarkdown({
     return merged;
   }, [collapsibleHeadings, components, copyCode, htmlEmbed, linkIcons]);
 
-  const rehypePlugins = useMemo(
-    () =>
-      collapsibleHeadings
-        ? [rehypeHighlight, rehypeKatex, rehypeCollapsibleHeadings]
-        : [rehypeHighlight, rehypeKatex],
-    [collapsibleHeadings],
+  const rehypePlugins = useMemo(() => {
+    const plugins: RehypePlugins = [rehypeHighlight, rehypeKatex];
+    if (linkLocalPaths) plugins.push(rehypeLocalPaths);
+    if (collapsibleHeadings) plugins.push(rehypeCollapsibleHeadings);
+    return plugins;
+  }, [collapsibleHeadings, linkLocalPaths]);
+  const markdownUrlTransform = useMemo(
+    () => (linkLocalPaths ? urlTransform : defaultUrlTransform),
+    [linkLocalPaths],
   );
 
   return (
@@ -127,6 +143,7 @@ export function BarkdownMarkdown({
         components={mergedComponents}
         rehypePlugins={rehypePlugins}
         remarkPlugins={[remarkGfm, remarkMath, remarkGithubEmojiImages]}
+        urlTransform={markdownUrlTransform}
       >
         {value}
       </ReactMarkdown>
