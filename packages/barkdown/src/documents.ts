@@ -27,11 +27,12 @@ export function documentMatches(
 }
 
 export function documentPath(search: string) {
-  return new URLSearchParams(search).get("document");
+  return new URLSearchParams(search).get("file");
 }
 
 export function documentUrl(current: string, path: string) {
   const url = new URL(current);
-  url.searchParams.set("document", path);
+  url.searchParams.set("file", path);
+  url.searchParams.delete("document");
   return url;
 }

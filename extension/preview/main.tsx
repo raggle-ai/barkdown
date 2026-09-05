@@ -1,11 +1,12 @@
 import "@raggle-ai/barkdown/styles.css";
 import "@raggle-ai/barkdown/explorer.css";
 
-import { BarkdownContent } from "@raggle-ai/barkdown";
+import {
+  BarkdownExplorer,
+  type BarkdownDataset,
+} from "@raggle-ai/barkdown/explorer";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-
-import readme from "../../README.md?raw";
 
 const root = document.getElementById("app");
 
@@ -21,13 +22,22 @@ document.body.style.fontFamily =
 
 createRoot(root).render(
   <StrictMode>
-    <main
-      className="document"
-      style={{
-        minHeight: "calc(100vh - 48px)",
+    <BarkdownExplorer
+      brand="BarkDown"
+      source={{
+        async read(): Promise<BarkdownDataset> {
+          const params = new URLSearchParams(window.location.search);
+          const path = params.get("path");
+          const query = path ? `?path=${encodeURIComponent(path)}` : "";
+          const response = await fetch(`/api/documents${query}`, {
+            cache: "no-store",
+          });
+          if (!response.ok) {
+            throw new Error("Could not load preview files.");
+          }
+          return response.json() as Promise<BarkdownDataset>;
+        },
       }}
-    >
-      <BarkdownContent mode="markdown" value={readme} />
-    </main>
+    />
   </StrictMode>,
 );
