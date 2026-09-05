@@ -2,7 +2,10 @@
 @import "katex/dist/katex.min.css";
 
 [data-barkdown] {
+  --barkdown-focus-color: #0969da;
   --barkdown-link-color: #0969da;
+  --barkdown-link-hover-color: #0550ae;
+  --barkdown-muted-color: color-mix(in srgb, currentColor 72%, transparent);
   min-width: 0;
   color: inherit;
   font: inherit;
@@ -74,11 +77,31 @@
   list-style-type: disc;
 }
 
+[data-barkdown] ul ul {
+  list-style-type: circle;
+}
+
+[data-barkdown] ul ul ul {
+  list-style-type: square;
+}
+
 [data-barkdown] ol {
   list-style-type: decimal;
 }
 
+[data-barkdown] ol ol {
+  list-style-type: lower-alpha;
+}
+
+[data-barkdown] ol ol ol {
+  list-style-type: lower-roman;
+}
+
 [data-barkdown] ul.contains-task-list {
+  list-style-type: none;
+}
+
+[data-barkdown] .task-list-item {
   list-style-type: none;
 }
 
@@ -96,6 +119,25 @@
   background: color-mix(in srgb, currentColor 6%, transparent);
   opacity: 0.88;
   padding: 0.55em 0.75em;
+}
+
+[data-barkdown] blockquote > :first-child {
+  margin-top: 0;
+}
+
+[data-barkdown] blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+[data-barkdown] small {
+  color: var(--barkdown-muted-color);
+  font-size: 0.8125em;
+  line-height: 1.45;
+}
+
+[data-barkdown] del {
+  color: var(--barkdown-muted-color);
+  text-decoration-thickness: 0.08em;
 }
 
 [data-barkdown] code {
@@ -120,6 +162,8 @@
 
 [data-barkdown] table {
   display: block;
+  width: max-content;
+  min-width: 100%;
   max-width: 100%;
   overflow-x: auto;
   border-collapse: collapse;
@@ -144,6 +188,17 @@
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 2px;
+  transition: color 120ms ease;
+}
+
+[data-barkdown] a:hover {
+  color: var(--barkdown-link-hover-color);
+}
+
+[data-barkdown] a:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--barkdown-focus-color);
+  outline-offset: 2px;
 }
 
 [data-barkdown] a .barkdown-link-icon {
@@ -172,6 +227,7 @@
 }
 
 [data-barkdown] img {
+  display: block;
   max-width: 100%;
   height: auto;
   border-radius: 8px;

@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   cloneElement,
   isValidElement,
+  type JSX,
   type ReactNode,
   useEffect,
   useMemo,
@@ -51,7 +52,11 @@ export type BarkdownMode = "markdown" | "mdx";
 
 export type BarkdownCodeProps = ComponentProps<"code"> & {
   inline?: boolean;
+  node?: unknown;
 };
+
+type BarkdownElementProps<T extends keyof JSX.IntrinsicElements> =
+  ComponentProps<T> & { node?: unknown };
 
 export type BarkdownMarkdownComponents = Record<string, ComponentType<any>>;
 
@@ -100,7 +105,7 @@ export function BarkdownMarkdown({
 }: BarkdownMarkdownProps) {
   const mergedComponents = useMemo<MarkdownComponents>(() => {
     const merged = {
-      a: (props: ComponentProps<"a">) =>
+      a: ({ node: _node, ...props }: BarkdownElementProps<"a">) =>
         linkIcons ? <BarkdownLink {...props} /> : <a {...props} />,
       code: (props: BarkdownCodeProps) => (
         <CodeBlock copy={copyCode} htmlEmbed={htmlEmbed} {...props} />
@@ -233,7 +238,11 @@ function CollapsibleSection({ children }: CollapsibleSectionProps) {
   );
 }
 
-function PreBlock({ children, ...props }: ComponentProps<"pre">) {
+function PreBlock({
+  children,
+  node: _node,
+  ...props
+}: BarkdownElementProps<"pre">) {
   if (
     isValidElement<{ className?: string }>(children) &&
     children.props.className
@@ -264,8 +273,9 @@ function faviconUrl(href: string): string | undefined {
 export function BarkdownLink({
   children,
   href,
+  node: _node,
   ...props
-}: ComponentProps<"a">) {
+}: BarkdownElementProps<"a">) {
   const icon = href ? faviconUrl(href) : undefined;
   return (
     <a href={href} {...props}>
@@ -383,6 +393,7 @@ export function CodeBlock({
   copy = true,
   htmlEmbed,
   inline,
+  node: _node,
   ...props
 }: BarkdownCodeProps & {
   copy?: boolean;

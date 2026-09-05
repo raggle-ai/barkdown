@@ -11,10 +11,14 @@ The extension imports the `@raggle-ai/barkdown` React package through `workspace
 
 ```bash
 pnpm install
+pnpm --filter @raggle-ai/barkdown exec playwright install --no-shell chromium
+pnpm test
 pnpm typecheck
 pnpm build
 pnpm extension:dist
 ```
+
+The Playwright install is a one-time setup for Barkdown's Chromium formatting regression test.
 
 `pnpm build` and `pnpm typecheck` run against the public npm package. `pnpm extension:dist` builds the unpacked extension into `extension/extension-dist/`.
 

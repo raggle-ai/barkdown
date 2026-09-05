@@ -7,6 +7,8 @@
     "format": "pnpm dlx prettier@^3.7.4 . --check",
     "format:fix": "pnpm dlx prettier@^3.7.4 . --write",
     "test": "pnpm --filter @raggle-ai/barkdown test",
+    "test:browser": "pnpm --filter @raggle-ai/barkdown test:browser",
+    "test:unit": "pnpm --filter @raggle-ai/barkdown test:unit",
     "typecheck": "pnpm --filter @raggle-ai/barkdown typecheck",
     "extension:dist": "pnpm --filter @raggle-ai/barkdown-extension extension:dist"
   }

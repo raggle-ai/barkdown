@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { createElement } from "react";
@@ -47,6 +48,42 @@ test("BarkdownMarkdown sanitizes unsafe inline HTML", () => {
 
   assert.match(html, /<small>Safe<\/small>/);
   assert.doesNotMatch(html, /onclick|<script/);
+});
+
+test("BarkdownMarkdown renders the complete formatting fixture", async () => {
+  const value = await readFile(
+    new URL("./fixtures/formatting.md", import.meta.url),
+    "utf8",
+  );
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, { value, linkIcons: false }),
+  );
+
+  for (const element of [
+    "small",
+    "em",
+    "strong",
+    "del",
+    "ul",
+    "ol",
+    "blockquote",
+    "code",
+    "pre",
+    "table",
+    "img",
+    "hr",
+  ]) {
+    assert.match(
+      html,
+      new RegExp(`<${element}(?:[ />])`),
+      `${element} rendered`,
+    );
+  }
+  assert.match(html, /class="contains-task-list"/);
+  assert.match(html, /class="task-list-item"/);
+  assert.match(html, /type="checkbox"/);
+  assert.match(html, /href="https:\/\/example\.com\/docs"/);
+  assert.doesNotMatch(html, /node="\[object Object\]"/);
 });
 
 test("collapsibleHeadings wraps content in sections with accessible toggle buttons", () => {
