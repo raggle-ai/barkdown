@@ -1,6 +1,14 @@
 # BarkDown
 
-BarkDown is a pnpm workspace with two related surfaces:
+BarkDown is an independent Raggle project for local Markdown reading,
+trusted MDX rendering, and folder-aware document preview.
+
+The repository was forked from
+[volca/markdown-preview](https://github.com/volca/markdown-preview). BarkDown
+now has its own roadmap, package, extension, and release process. See
+[NOTICE.md](NOTICE.md) for origin and license attribution.
+
+This pnpm workspace has two related surfaces:
 
 - `packages/barkdown` - the public `@raggle-ai/barkdown` React package for Markdown and trusted MDX rendering.
 - `extension` - the Chrome extension that renders local Markdown files with its browser-extension renderer.
