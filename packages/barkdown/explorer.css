@@ -147,7 +147,6 @@ summary:focus-visible,
 }
 
 .desktop-close {
-  display: none;
   margin-left: auto;
 }
 
@@ -889,6 +888,24 @@ button.root-path:hover {
   }
 }
 
+@media (min-width: 761px) {
+  .shell.is-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shell.is-collapsed .sidebar {
+    display: none;
+  }
+
+  .shell.is-collapsed .mobile-menu {
+    display: grid;
+  }
+
+  .shell.is-collapsed .document-header {
+    padding-left: 54px;
+  }
+}
+
 @media (max-width: 760px) {
   :root {
     background: #fff;
@@ -911,6 +928,10 @@ button.root-path:hover {
 
   .sidebar.is-open {
     transform: translateX(0);
+  }
+
+  .desktop-close {
+    display: none;
   }
 
   .mobile-close {

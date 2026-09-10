@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { parseDocument } from "yaml";
 
+import { LinkIcon } from "./link.js";
 import {
   documentKind,
   documentMatches,
@@ -227,16 +228,7 @@ export function BarkdownExplorer({
 
     return (
       <a {...props} href={href} onClick={handle}>
-        {showLinkIcons && href && /^https?:\/\//i.test(href) ? (
-          <img
-            alt=""
-            className="barkdown-link-icon"
-            height={16}
-            loading="lazy"
-            src={`https://www.google.com/s2/favicons?domain=${new URL(href).hostname}&sz=32`}
-            width={16}
-          />
-        ) : null}
+        {showLinkIcons && href ? <LinkIcon href={href} /> : null}
         {children}
       </a>
     );
