@@ -570,19 +570,19 @@ button.root-path:hover {
 }
 
 .document {
-  width: min(calc(100% - 48px), 800px);
-  min-height: calc(100vh - 100px);
-  margin: 24px auto 48px;
-  border: 1px solid #e7e7e7;
-  border-radius: 18px;
+  width: 100%;
+  min-height: calc(100vh - 52px);
+  margin: 0;
+  border: 0;
+  border-radius: 0;
   background: #fff;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 3%);
-  padding: 64px 64px 112px;
+  box-shadow: none;
+  padding: 0 5%;
   outline: none;
 }
 
 .document.is-html {
-  width: min(calc(100% - 48px), 880px);
+  width: 100%;
   overflow: hidden;
   padding: 0;
 }
@@ -590,7 +590,7 @@ button.root-path:hover {
 .html-document {
   display: block;
   width: 100%;
-  min-height: calc(100vh - 100px);
+  min-height: calc(100vh - 52px);
   border: 0;
   background: white;
 }
