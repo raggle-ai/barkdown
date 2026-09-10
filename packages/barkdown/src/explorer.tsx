@@ -411,9 +411,7 @@ export function BarkdownExplorer({
 }
 
 function Frontmatter({ entries }: { entries: [string, unknown][] }) {
-  const [open, setOpen] = useState(
-    () => !window.matchMedia("(max-width: 760px)").matches,
-  );
+  const [open, setOpen] = useState(false);
 
   return (
     <details
