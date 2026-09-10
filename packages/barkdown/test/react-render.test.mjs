@@ -286,6 +286,35 @@ test("BarkdownMarkdown renders a favicon for external links", () => {
   assert.match(html, /<a href="\/local\/page"[^>]*>page<\/a>/);
 });
 
+test("BarkdownMarkdown renders file-type badges for local file links", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value:
+        "[spec](./spec.pdf) and [readme](docs/guide.md) and [scale](notes.txt) and [zip](../bundle.zip)",
+    }),
+  );
+
+  assert.equal(html.match(/class="barkdown-link-icon"/g).length, 4);
+  assert.match(html, />PDF<\/text>/);
+  assert.match(html, />MD<\/text>/);
+  assert.match(html, />TXT<\/text>/);
+  assert.match(html, />ZIP<\/text>/);
+});
+
+test("BarkdownMarkdown renders a generic badge for unknown file types", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: "[model](models/model.gguf) and [hidden](.env) and [hash](#section)",
+    }),
+  );
+
+  // Unknown extension gets the raw label; hidden and hash links get no icon.
+  assert.equal(html.match(/class="barkdown-link-icon"/g).length, 1);
+  assert.match(html, />GGUF<\/text>/);
+  assert.match(html, /<a href="\.env"/);
+  assert.match(html, /<a href="#section"[^>]*>hash<\/a>/);
+});
+
 test("BarkdownMarkdown linkIcons=false skips favicon rendering", () => {
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {

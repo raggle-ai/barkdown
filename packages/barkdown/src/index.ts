@@ -14,6 +14,8 @@ export {
   BarkdownLink,
   LinkIcon,
   faviconUrl,
+  fileBadge,
   type BarkdownLinkProps,
+  type FileBadge,
 } from "./link.js";
 export { BarkdownMermaid, type BarkdownMermaidProps } from "./react-mermaid.js";
