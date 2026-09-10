@@ -243,7 +243,9 @@ export function BarkdownExplorer({
   return (
     <main
       className={
-        sidebar ? "shell barkdown-explorer" : "shell barkdown-explorer is-collapsed"
+        sidebar
+          ? "shell barkdown-explorer"
+          : "shell barkdown-explorer is-collapsed"
       }
     >
       {sidebar ? (
@@ -361,7 +363,9 @@ export function BarkdownExplorer({
               <button
                 className="sidebar-toggle"
                 type="button"
-                aria-label={sidebar ? "Close file browser" : "Open file browser"}
+                aria-label={
+                  sidebar ? "Close file browser" : "Open file browser"
+                }
                 title={sidebar ? "Close file browser" : "Open file browser"}
                 onClick={() => setSidebar((value) => !value)}
               >

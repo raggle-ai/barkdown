@@ -304,7 +304,8 @@ test("BarkdownMarkdown renders file-type badges for local file links", () => {
 test("BarkdownMarkdown renders a generic badge for unknown file types", () => {
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {
-      value: "[model](models/model.gguf) and [hidden](.env) and [hash](#section)",
+      value:
+        "[model](models/model.gguf) and [hidden](.env) and [hash](#section)",
     }),
   );
 
