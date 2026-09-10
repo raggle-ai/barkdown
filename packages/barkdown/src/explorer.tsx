@@ -128,7 +128,7 @@ export function BarkdownExplorer({
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(queryPath);
   const [query, setQuery] = useState("");
-  const [sidebar, setSidebar] = useState(false);
+  const [sidebar, setSidebar] = useState(() => window.innerWidth > 760);
   const search = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -163,6 +163,12 @@ export function BarkdownExplorer({
     const update = () => setSelected(queryPath());
     window.addEventListener("popstate", update);
     return () => window.removeEventListener("popstate", update);
+  }, []);
+
+  useEffect(() => {
+    const update = () => setSidebar(window.innerWidth > 760);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   useEffect(() => {
@@ -235,7 +241,11 @@ export function BarkdownExplorer({
   };
 
   return (
-    <main className="shell barkdown-explorer">
+    <main
+      className={
+        sidebar ? "shell barkdown-explorer" : "shell barkdown-explorer is-collapsed"
+      }
+    >
       <button
         className="mobile-menu"
         type="button"
