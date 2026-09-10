@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm --filter @raggle-ai/barkdown build",
+    "dev": "cd apps/preview && bun dev",
     "format": "pnpm dlx prettier@^3.7.4 . --check",
     "format:fix": "pnpm dlx prettier@^3.7.4 . --write",
     "install:global": "node scripts/install-global.mjs",

@@ -14,6 +14,9 @@ on a phone.
 - Use `barkdown <file-or-folder>` when the global command is installed.
 - Use `pnpm preview <file-or-folder>` from the repository root when you need the
   repo-local command.
+- Use `bun dev` from the repository root for the standalone preview app in
+  `apps/preview/`, which imports `@raggle-ai/barkdown` separately as a test
+  consumer and serves `test/` by default (`http://localhost:5173/?file=...`).
 - Use `pnpm install:global` to install or refresh the `barkdown` command in
   `~/.local/bin`.
 

@@ -41,31 +41,14 @@ console.log(`Previewing ${stat.isDirectory() ? folder : target}`);
 console.log(`Open on mobile: ${url}`);
 console.log("The phone and this computer must use the same local network.");
 
-const child = spawn(
-  "pnpm",
-  [
-    "--filter",
-    "@raggle-ai/barkdown-extension",
-    "exec",
-    "vite",
-    "serve",
-    "preview",
-    "--host",
-    "0.0.0.0",
-    "--port",
-    String(port),
-    "--config",
-    "vite.config.ts",
-  ],
-  {
-    cwd: root,
-    env: {
-      ...process.env,
-      BARKDOWN_PREVIEW_ROOT: folder,
-    },
-    stdio: "inherit",
+const child = spawn("bun", ["run", "dev", "--port", String(port)], {
+  cwd: resolve(root, "apps/preview"),
+  env: {
+    ...process.env,
+    BARKDOWN_PREVIEW_ROOT: folder,
   },
-);
+  stdio: "inherit",
+});
 
 child.on("exit", (code, signal) => {
   if (signal) process.kill(process.pid, signal);
