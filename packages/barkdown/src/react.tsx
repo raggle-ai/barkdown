@@ -26,6 +26,7 @@ import remarkMath from "remark-math";
 import * as runtime from "react/jsx-runtime";
 
 import { remarkGithubEmojiImages } from "./emoji.js";
+import { BarkdownLink } from "./link.js";
 import {
   COLLAPSIBLE_SECTION_TAG,
   rehypeCollapsibleHeadings,
@@ -257,41 +258,6 @@ function PreBlock({
   }
 
   return <pre {...props}>{children}</pre>;
-}
-
-function faviconUrl(href: string): string | undefined {
-  let url: URL;
-  try {
-    url = new URL(href);
-  } catch {
-    return undefined;
-  }
-  if (url.protocol !== "http:" && url.protocol !== "https:") return undefined;
-  return `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=32`;
-}
-
-export function BarkdownLink({
-  children,
-  href,
-  node: _node,
-  ...props
-}: BarkdownElementProps<"a">) {
-  const icon = href ? faviconUrl(href) : undefined;
-  return (
-    <a href={href} {...props}>
-      {icon ? (
-        <img
-          alt=""
-          className="barkdown-link-icon"
-          height={16}
-          loading="lazy"
-          src={icon}
-          width={16}
-        />
-      ) : null}
-      {children}
-    </a>
-  );
 }
 
 export function BarkdownMdx({
