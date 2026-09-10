@@ -114,8 +114,7 @@ button.mark:hover {
   font-size: 11px;
 }
 
-.icon-button,
-.mobile-menu {
+.icon-button {
   display: grid;
   width: 32px;
   height: 32px;
@@ -126,13 +125,11 @@ button.mark:hover {
   cursor: pointer;
 }
 
-.icon-button:hover,
-.mobile-menu:hover {
+.icon-button:hover {
   background: #e3e2dc;
 }
 
 .icon-button:focus-visible,
-.mobile-menu:focus-visible,
 .file:focus-visible,
 summary:focus-visible,
 .search input:focus-visible {
@@ -140,8 +137,34 @@ summary:focus-visible,
   outline-offset: 1px;
 }
 
-.icon-button svg,
-.mobile-menu svg {
+.icon-button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.sidebar-toggle {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #dedede;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  cursor: pointer;
+}
+
+.sidebar-toggle:hover {
+  background: #f0efe9;
+}
+
+.sidebar-toggle:focus-visible {
+  outline: 2px solid #56725e;
+  outline-offset: 1px;
+}
+
+.sidebar-toggle svg {
   width: 17px;
   height: 17px;
 }
@@ -502,9 +525,10 @@ button.root-path:hover {
   display: flex;
   height: 52px;
   align-items: center;
+  gap: 12px;
   border-bottom: 1px solid #e5e5e5;
   background: rgb(255 255 255 / 92%);
-  padding: 0 32px;
+  padding: 0 24px 0 12px;
   backdrop-filter: blur(12px);
 }
 
@@ -865,7 +889,6 @@ button.root-path:hover {
   width: 60%;
 }
 
-.mobile-menu,
 .scrim {
   display: none;
 }
@@ -895,14 +918,6 @@ button.root-path:hover {
 
   .shell.is-collapsed .sidebar {
     display: none;
-  }
-
-  .shell.is-collapsed .mobile-menu {
-    display: grid;
-  }
-
-  .shell.is-collapsed .document-header {
-    padding-left: 54px;
   }
 }
 
@@ -938,18 +953,6 @@ button.root-path:hover {
     display: grid;
   }
 
-  .mobile-menu {
-    position: fixed;
-    z-index: 15;
-    top: max(10px, env(safe-area-inset-top));
-    left: max(10px, env(safe-area-inset-left));
-    display: grid;
-    border: 1px solid #dedede;
-    border-radius: 9px;
-    background: #fff;
-    box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
-  }
-
   .scrim {
     position: fixed;
     z-index: 19;
@@ -964,7 +967,7 @@ button.root-path:hover {
 
   .document-header {
     height: 52px;
-    padding: 0 18px 0 54px;
+    padding: 0 18px;
   }
 
   .header-title {

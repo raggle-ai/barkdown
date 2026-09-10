@@ -11,8 +11,8 @@ import {
   FileText,
   Folder,
   FolderOpen,
-  Menu,
   PanelLeftClose,
+  PanelLeftOpen,
   Search,
   X,
 } from "lucide-react";
@@ -246,15 +246,6 @@ export function BarkdownExplorer({
         sidebar ? "shell barkdown-explorer" : "shell barkdown-explorer is-collapsed"
       }
     >
-      <button
-        className="mobile-menu"
-        type="button"
-        aria-label="Open file browser"
-        onClick={() => setSidebar(true)}
-      >
-        <Menu aria-hidden="true" />
-      </button>
-
       {sidebar ? (
         <button
           className="scrim"
@@ -367,6 +358,19 @@ export function BarkdownExplorer({
         {document ? (
           <>
             <header className="document-header">
+              <button
+                className="sidebar-toggle"
+                type="button"
+                aria-label={sidebar ? "Close file browser" : "Open file browser"}
+                title={sidebar ? "Close file browser" : "Open file browser"}
+                onClick={() => setSidebar((value) => !value)}
+              >
+                {sidebar ? (
+                  <PanelLeftClose aria-hidden="true" />
+                ) : (
+                  <PanelLeftOpen aria-hidden="true" />
+                )}
+              </button>
               <div className="header-title">
                 <FileText aria-hidden="true" />
                 <span>{documentTitle(document.path)}</span>
