@@ -43,17 +43,19 @@ button {
   background: #d9e7ff;
 }
 
-.shell {
+.barkdown-explorer.shell {
   display: grid;
   min-height: 100vh;
   grid-template-columns: 280px minmax(0, 1fr);
 }
 
-.sidebar {
+.barkdown-explorer .sidebar {
   position: sticky;
   z-index: 20;
   top: 0;
   display: grid;
+  width: 100%;
+  max-width: 100%;
   height: 100vh;
   min-width: 0;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -142,7 +144,7 @@ summary:focus-visible,
   height: 17px;
 }
 
-.sidebar-toggle {
+.barkdown-explorer .sidebar-toggle {
   display: grid;
   width: 32px;
   height: 32px;
@@ -155,16 +157,16 @@ summary:focus-visible,
   cursor: pointer;
 }
 
-.sidebar-toggle:hover {
+.barkdown-explorer .sidebar-toggle:hover {
   background: #f0efe9;
 }
 
-.sidebar-toggle:focus-visible {
+.barkdown-explorer .sidebar-toggle:focus-visible {
   outline: 2px solid #56725e;
   outline-offset: 1px;
 }
 
-.sidebar-toggle svg {
+.barkdown-explorer .sidebar-toggle svg {
   width: 17px;
   height: 17px;
 }
@@ -380,31 +382,31 @@ button.root-path:hover {
   background: #f7f7f8;
 }
 
-.barkdown-theme-warm .shell,
-.barkdown-theme-warm .workspace {
+.barkdown-theme-warm .barkdown-explorer.shell,
+.barkdown-theme-warm .barkdown-explorer .workspace {
   background: #fbf3e6;
 }
 
-.barkdown-theme-warm .sidebar,
-.barkdown-theme-warm .document-header {
+.barkdown-theme-warm .barkdown-explorer .sidebar,
+.barkdown-theme-warm .barkdown-explorer .document-header {
   background: #f5ead8;
 }
 
-.barkdown-theme-warm .document {
+.barkdown-theme-warm .barkdown-explorer .document {
   background: #fffaf1;
 }
 
-.barkdown-theme-sage .shell,
-.barkdown-theme-sage .workspace {
+.barkdown-theme-sage .barkdown-explorer.shell,
+.barkdown-theme-sage .barkdown-explorer .workspace {
   background: #eef3ed;
 }
 
-.barkdown-theme-sage .sidebar,
-.barkdown-theme-sage .document-header {
+.barkdown-theme-sage .barkdown-explorer .sidebar,
+.barkdown-theme-sage .barkdown-explorer .document-header {
   background: #e4ebe1;
 }
 
-.barkdown-theme-sage .document {
+.barkdown-theme-sage .barkdown-explorer .document {
   background: #fbfdf9;
 }
 
@@ -413,13 +415,13 @@ button.root-path:hover {
   background: #151712;
 }
 
-.barkdown-theme-dark .shell,
-.barkdown-theme-dark .workspace {
+.barkdown-theme-dark .barkdown-explorer.shell,
+.barkdown-theme-dark .barkdown-explorer .workspace {
   background: #151712;
 }
 
-.barkdown-theme-dark .sidebar,
-.barkdown-theme-dark .document-header {
+.barkdown-theme-dark .barkdown-explorer .sidebar,
+.barkdown-theme-dark .barkdown-explorer .document-header {
   border-color: #2e332a;
   background: #1c2018;
 }
@@ -513,12 +515,12 @@ button.root-path:hover {
   padding: 7px 8px;
 }
 
-.workspace {
+.barkdown-explorer .workspace {
   min-width: 0;
   background: #f7f7f8;
 }
 
-.document-header {
+.barkdown-explorer .document-header {
   position: sticky;
   z-index: 10;
   top: 0;
@@ -912,11 +914,11 @@ button.root-path:hover {
 }
 
 @media (min-width: 761px) {
-  .shell.is-collapsed {
+  .barkdown-explorer.shell.is-collapsed {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .shell.is-collapsed .sidebar {
+  .barkdown-explorer.shell.is-collapsed .sidebar {
     display: none;
   }
 }
@@ -926,11 +928,11 @@ button.root-path:hover {
     background: #fff;
   }
 
-  .shell {
+  .barkdown-explorer.shell {
     display: block;
   }
 
-  .sidebar {
+  .barkdown-explorer .sidebar {
     position: fixed;
     left: 0;
     width: min(90vw, 340px);
@@ -941,7 +943,7 @@ button.root-path:hover {
     transition: transform 180ms ease;
   }
 
-  .sidebar.is-open {
+  .barkdown-explorer .sidebar.is-open {
     transform: translateX(0);
   }
 

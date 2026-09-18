@@ -6,7 +6,7 @@ import test from "node:test";
 
 import { barkdownPlugin } from "../dist/vite.js";
 
-test("barkdownPlugin reads the folder in the path query", async () => {
+test("barkdownPlugin reads the folder in root and path queries", async () => {
   const root = mkdtempSync(join(tmpdir(), "barkdown-vite-"));
   const selected = join(root, "selected");
   mkdirSync(selected);
@@ -29,27 +29,32 @@ test("barkdownPlugin reads the folder in the path query", async () => {
     },
   });
 
-  let status;
-  let body = "";
-  await middleware(
-    { url: `/api/documents?path=${encodeURIComponent(selected)}` },
-    {
-      writeHead(value) {
-        status = value;
+  for (const query of [
+    `root=${encodeURIComponent(selected)}`,
+    `path=${encodeURIComponent(selected)}`,
+  ]) {
+    let status;
+    let body = "";
+    await middleware(
+      { url: `/api/documents?${query}` },
+      {
+        writeHead(value) {
+          status = value;
+        },
+        end(value) {
+          body = value;
+        },
       },
-      end(value) {
-        body = value;
-      },
-    },
-    () => assert.fail("The API middleware called next"),
-  );
+      () => assert.fail("The API middleware called next"),
+    );
 
-  assert.equal(status, 200);
-  assert.deepEqual(JSON.parse(body), {
-    root: selected,
-    documents: [
-      { path: "README.md", content: "# Selected\n", kind: "markdown" },
-    ],
-  });
+    assert.equal(status, 200);
+    assert.deepEqual(JSON.parse(body), {
+      root: selected,
+      documents: [
+        { path: "README.md", content: "# Selected\n", kind: "markdown" },
+      ],
+    });
+  }
   assert.ok(watched.some((path) => path.startsWith(selected)));
 });

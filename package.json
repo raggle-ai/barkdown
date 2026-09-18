@@ -14,5 +14,10 @@
     "test:unit": "pnpm --filter @raggle-ai/barkdown test:unit",
     "typecheck": "pnpm --filter @raggle-ai/barkdown typecheck",
     "extension:dist": "pnpm --filter @raggle-ai/barkdown-extension extension:dist"
-  }
+  },
+  "workspaces": [
+    "packages/*",
+    "extension",
+    "apps/*"
+  ]
 }

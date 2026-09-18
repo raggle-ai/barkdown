@@ -49,18 +49,25 @@ export function barkdownPlugin(root: string) {
 
         try {
           const url = new URL(request.url ?? "/", "http://127.0.0.1");
-          const root = resolve(url.searchParams.get("path") ?? folder);
+          const rootParam =
+            url.searchParams.get("root") ??
+            url.searchParams.get("path") ??
+            folder;
+          const root = resolve(rootParam);
           watch(root);
+          const dataset = await readFolder(root);
           response.writeHead(200, {
             "Cache-Control": "no-store",
             "Content-Type": "application/json; charset=utf-8",
           });
-          response.end(JSON.stringify(await readFolder(root)));
+          response.end(JSON.stringify(dataset));
         } catch (error) {
-          response.writeHead(500, {
-            "Cache-Control": "no-store",
-            "Content-Type": "application/json; charset=utf-8",
-          });
+          if (!response.headersSent) {
+            response.writeHead(500, {
+              "Cache-Control": "no-store",
+              "Content-Type": "application/json; charset=utf-8",
+            });
+          }
           response.end(
             JSON.stringify({
               error:

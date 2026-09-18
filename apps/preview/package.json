@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0"
+    "dev": "vite --host 0.0.0.0 --port 5173 --strictPort",
+    "dev:local": "vite --host 127.0.0.1 --port 5173 --strictPort"
   },
   "dependencies": {
     "@raggle-ai/barkdown": "file:../../packages/barkdown",

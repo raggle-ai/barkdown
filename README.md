@@ -47,7 +47,7 @@ can run `barkdown <markdown-file>` from any folder.
 
 ## Publishing
 
-The npm package is published from `packages/barkdown` as `@raggle-ai/barkdown`. The GitHub Actions release workflow installs and verifies from the workspace root, then runs `aube publish --provenance` from the package directory.
+The npm package is published from `packages/barkdown` as `@raggle-ai/barkdown`. The GitHub Actions release workflow installs and verifies from the workspace root, then runs `npm publish --provenance --access public` from the package directory.
 
 ## Local Extension
 

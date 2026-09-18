@@ -26,10 +26,7 @@ createRoot(root).render(
       brand="BarkDown"
       source={{
         async read(): Promise<BarkdownDataset> {
-          const params = new URLSearchParams(window.location.search);
-          const path = params.get("path");
-          const query = path ? `?path=${encodeURIComponent(path)}` : "";
-          const response = await fetch(`/api/documents${query}`, {
+          const response = await fetch(`/api/documents`, {
             cache: "no-store",
           });
           if (!response.ok) {
