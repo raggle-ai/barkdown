@@ -21,6 +21,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import * as runtime from "react/jsx-runtime";
@@ -149,7 +150,12 @@ export function BarkdownMarkdown({
       <ReactMarkdown
         components={mergedComponents}
         rehypePlugins={rehypePlugins}
-        remarkPlugins={[remarkGfm, remarkMath, remarkGithubEmojiImages]}
+        remarkPlugins={[
+          remarkBreaks,
+          remarkGfm,
+          remarkMath,
+          remarkGithubEmojiImages,
+        ]}
       >
         {value}
       </ReactMarkdown>

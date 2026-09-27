@@ -39,6 +39,39 @@ test("BarkdownMarkdown renders inline HTML formatting", () => {
   assert.match(html, /<small><em>Potential quote<\/em><\/small>/);
 });
 
+test("BarkdownMarkdown renders single newlines as hard breaks", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: [
+        "**Andrew Maguire**",
+        "Director, Baker Street",
+        "[andrew@bakerstreet.tech](mailto:andrew@bakerstreet.tech)",
+      ].join("\n"),
+    }),
+  );
+
+  // Soft line breaks become real breaks instead of collapsing to spaces.
+  assert.match(html, /<strong>Andrew Maguire<\/strong><br\/>/);
+  assert.match(html, /Director, Baker Street<br\/>/);
+});
+
+test("BarkdownMarkdown preserves blank-line paragraph separation", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: ["First paragraph.", "", "Second paragraph.", "", "Third."].join(
+        "\n",
+      ),
+    }),
+  );
+
+  // Blank lines still make real paragraphs; only single newlines break.
+  assert.equal(
+    html.match(/<p>/g).length,
+    3,
+    "blank-line separated paragraphs remain separate",
+  );
+});
+
 test("BarkdownMarkdown sanitizes unsafe inline HTML", () => {
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {
