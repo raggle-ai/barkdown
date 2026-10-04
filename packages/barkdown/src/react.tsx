@@ -33,10 +33,37 @@ import {
   rehypeCollapsibleHeadings,
 } from "./rehype-collapsible-headings.js";
 import { BarkdownMermaid } from "./react-mermaid.js";
+import { ImagePreview, VideoPreview } from "./react-media.js";
 
 const markdownSchema = {
   ...defaultSchema,
-  tagNames: [...(defaultSchema.tagNames ?? []), "small"],
+  tagNames: [
+    ...(defaultSchema.tagNames ?? []),
+    "small",
+    "video",
+    "source",
+    "track",
+  ],
+  attributes: {
+    ...defaultSchema.attributes,
+    video: [
+      "src",
+      "poster",
+      "controls",
+      "preload",
+      "width",
+      "height",
+      "loop",
+      "muted",
+      "playsInline",
+    ],
+    source: ["src", "type"],
+    track: ["src", "kind", "label", "srcLang", "default"],
+  },
+  protocols: {
+    ...defaultSchema.protocols,
+    poster: ["http", "https"],
+  },
 };
 const sanitizeMarkdown: [typeof rehypeSanitize, typeof markdownSchema] = [
   rehypeSanitize,
@@ -113,6 +140,8 @@ export function BarkdownMarkdown({
         <CodeBlock copy={copyCode} htmlEmbed={htmlEmbed} {...props} />
       ),
       pre: (props: ComponentProps<"pre">) => <PreBlock {...props} />,
+      img: ImagePreview,
+      video: VideoPreview,
       ...components,
     };
     // `barkdown-section` groups only exist when the rehype plugin ran.
@@ -284,6 +313,8 @@ export function BarkdownMdx({
       code: (props: BarkdownCodeProps) => (
         <CodeBlock copy={copyCode} {...props} />
       ),
+      img: ImagePreview,
+      video: VideoPreview,
       ...components,
     };
   }, [components, copyCode]);

@@ -39,6 +39,53 @@ test("BarkdownMarkdown renders inline HTML formatting", () => {
   assert.match(html, /<small><em>Potential quote<\/em><\/small>/);
 });
 
+test("BarkdownMarkdown preserves video sources, captions, and safe attributes", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      components: {
+        video: ({ node, ...props }) => createElement("video", props),
+      },
+      value:
+        '<video controls playsinline preload="metadata" width="640" poster="https://example.com/poster.jpg" src="/demo.mp4"><source src="https://example.com/demo.mp4" type="video/mp4"><track src="/captions.vtt" kind="captions" srclang="en" label="English" default></video>',
+    }),
+  );
+  assert.match(html, /<video[^>]*controls=""/);
+  assert.match(html, /playsInline=""/);
+  assert.match(html, /preload="metadata"/);
+  assert.match(html, /poster="https:\/\/example.com\/poster.jpg"/);
+  assert.match(html, /src="\/demo.mp4"/);
+  assert.match(html, /<source[^>]*type="video\/mp4"/);
+  assert.match(html, /<track[^>]*srcLang="en"/);
+});
+
+test("BarkdownMarkdown renders compact, collapsed image and video previews", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value:
+        '![Example picture](/picture.jpg)\n\n<video title="Demo video" controls src="/demo.mp4" poster="/poster.jpg"></video>',
+    }),
+  );
+  assert.equal((html.match(/aria-expanded="false"/g) || []).length, 2);
+  assert.match(html, /Example picture/);
+  assert.match(html, /Demo video/);
+  assert.match(html, /src="\/poster.jpg"/);
+  assert.doesNotMatch(html, /barkdown-media-content|<video/);
+});
+
+test("BarkdownMarkdown rejects unsafe media URLs, event handlers, and autoplay", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      components: {
+        video: ({ node, ...props }) => createElement("video", props),
+      },
+      value:
+        '<video autoplay onplay="alert(1)" src="javascript:alert(1)" poster="javascript:alert(1)"><source src="javascript:alert(1)"><track src="javascript:alert(1)"></video>',
+    }),
+  );
+  assert.match(html, /<video/);
+  assert.doesNotMatch(html, /javascript:|onplay|autoplay/i);
+});
+
 test("BarkdownMarkdown renders single newlines as hard breaks", () => {
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {
