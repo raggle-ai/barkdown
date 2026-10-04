@@ -19,3 +19,4 @@ export {
   type FileBadge,
 } from "./link.js";
 export { BarkdownMermaid, type BarkdownMermaidProps } from "./react-mermaid.js";
+export { ImagePreview, IframePreview, VideoPreview } from "./react-media.js";

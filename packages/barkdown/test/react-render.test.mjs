@@ -72,6 +72,102 @@ test("BarkdownMarkdown renders compact, collapsed image and video previews", () 
   assert.doesNotMatch(html, /barkdown-media-content|<video/);
 });
 
+test("markdown image with a hosted video URL renders a player like Obsidian", () => {
+  // Obsidian's documented syntax: ![](https://www.youtube.com/watch?v=ID)
+  // Rendered as a collapsed preview card with the YouTube thumbnail; the
+  // nocookie embed loads only when the reader expands the card.
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: '![](https://www.youtube.com/watch?v=dQw4w9WgXcQ)',
+    }),
+  );
+  assert.match(
+    html,
+    /src="https:\/\/i\.ytimg\.com\/vi\/dQw4w9WgXcQ\/hqdefault.jpg"/,
+  );
+  assert.match(html, /YouTube video dQw4w9WgXcQ/);
+  assert.doesNotMatch(html, /<img[^>]*src="https:\/\/www\.youtube\.com/);
+});
+
+test("markdown image with alt text still images external image URLs", () => {
+  // Obsidian's external image syntax: ![alt](https://...jpg)
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: '![Engelbart](https://example.com/Engelbart.jpg)',
+    }),
+  );
+  assert.match(html, /src="https:\/\/example\.com\/Engelbart\.jpg"/);
+  assert.doesNotMatch(html, /iframe/);
+});
+
+test("markdown image with title keeps image behavior even for video URLs", () => {
+  // Obsidian renders ![](youtube) as a player, but ![alt](youtube) with an
+  // explicit alt still prefers the author's intent. Treat an explicit
+  // markdown title as "this is an image" so the author can opt out.
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value:
+        '![Engelbart](https://www.youtube.com/watch?v=dQw4w9WgXcQ "External image")',
+    }),
+  );
+  assert.match(html, /External image/);
+  assert.match(html, /src="https:\/\/www\.youtube\.com\/watch/);
+  assert.doesNotMatch(html, /youtube-nocookie/);
+});
+
+test("raw iframe embeds render as collapsible previews", () => {
+  // Obsidian's Embed web pages syntax: <iframe src="..."></iframe>
+  // Collapsed, the iframe document itself is not mounted.
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: '<iframe src="https://example.com/embed/xyz" title="Demo"></iframe>',
+    }),
+  );
+  assert.match(html, /aria-expanded="false"/);
+  assert.match(html, /Demo/);
+  assert.doesNotMatch(html, /<iframe/);
+});
+
+test("raw iframe embeds keep explicit titles and drop unsafe attributes", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value:
+        '<iframe src="https://example.com/a" title="Trusted page" sandbox="allow-scripts" allow="autoplay" onerror="alert(1)"></iframe>',
+    }),
+  );
+  assert.doesNotMatch(html, /<iframe/);
+  assert.doesNotMatch(html, /sandbox|allow=|onerror/);
+  assert.match(html, /Trusted page/);
+});
+
+test("raw iframe embeds without titles derive a name from the URL", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>',
+    }),
+  );
+  assert.match(html, /YouTube video dQw4w9WgXcQ/);
+});
+
+test("raw iframe embeds reject javascript: URLs and get no iframe element", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: '<iframe src="javascript:alert(1)"></iframe>',
+    }),
+  );
+  assert.doesNotMatch(html, /<iframe/);
+  assert.doesNotMatch(html, /javascript:/);
+});
+
+test("markdown image with a raw data URL is not treated as hosted video", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: '![](data:image/png;base64,iVBORw0KGgo=)',
+    }),
+  );
+  assert.doesNotMatch(html, /youtube-nocookie|iframe/);
+});
+
 test("BarkdownMarkdown rejects unsafe media URLs, event handlers, and autoplay", () => {
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {

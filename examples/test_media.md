@@ -4,12 +4,26 @@ Images and videos start collapsed as small thumbnail + title rows.
 Click to expand; click again to collapse. Collapsing a video stops
 playback, and expanding it resumes with autoplay.
 
-## Local Glimpse demo
+## Obsidian parity: markdown-image video embed
 
-Served via Vite's `/@fs/` path when previewing locally — these paths
-are not portable web URLs.
+Obsidian renders `![](https://youtube.com/watch?v=…)` as a video player,
+not an image. Barkdown now matches: collapsed card with the YouTube
+thumbnail, nocookie embed loads only when expanded.
 
-<video title="Glimpse — local demo" controls preload="metadata" playsinline width="800" poster="/@fs/Users/andrew/Downloads/barkdown-media-test/glimpse-poster.jpg" src="/@fs/Users/andrew/Documents/GitHub/glimpse/assets/demo.mp4"></video>
+![](https://www.youtube.com/watch?v=NnTvZWp5Q7o)
+
+An explicit markdown title opts back out to plain image behavior:
+
+![Titled image pointing at a YouTube URL](https://www.youtube.com/watch?v=NnTvZWp5Q7o "Image, not player")
+
+## Obsidian parity: iframe web-page embed
+
+Obsidian's documented `<iframe src="…">` embed syntax. Barkdown renders it
+as a collapsed card; unsafe attributes (sandbox, allow, on*) are dropped.
+
+<iframe title="Wikipedia — Blender Foundation" src="https://en.wikipedia.org/wiki/Blender_Foundation" width="800" height="600"></iframe>
+
+<iframe title="YouTube embed via iframe" src="https://www.youtube.com/embed/NnTvZWp5Q7o"></iframe>
 
 ## Big Buck Bunny — poster
 
