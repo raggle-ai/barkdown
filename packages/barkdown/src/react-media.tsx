@@ -54,10 +54,12 @@ function mediaTitle(src: string | undefined, fallback: string): string {
 /** Player iframe and thumbnail for links hosted by a public video platform
  * (YouTube, Vimeo, Streamable, Loom). Returns undefined for other URLs so
  * plain <video src> keeps handling raw MP4 files. */
-function hostedPlayer(url: string): {
-  thumb: ReactNode;
-  iframe: { src: string };
-} | undefined {
+function hostedPlayer(url: string):
+  | {
+      thumb: ReactNode;
+      iframe: { src: string };
+    }
+  | undefined {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -67,36 +69,57 @@ function hostedPlayer(url: string): {
   if (url.match(/\/embed\/[A-Za-z0-9_-]{11}/)) {
     return embedPlayer(url, undefined);
   }
-  if (parsed.hostname.endsWith("youtube.com") || parsed.hostname === "youtube.com" || parsed.hostname === "m.youtube.com") {
-    const videoId = parsed.searchParams.get("v") ?? parsed.pathname.split("/").filter(Boolean).pop();
+  if (
+    parsed.hostname.endsWith("youtube.com") ||
+    parsed.hostname === "youtube.com" ||
+    parsed.hostname === "m.youtube.com"
+  ) {
+    const videoId =
+      parsed.searchParams.get("v") ??
+      parsed.pathname.split("/").filter(Boolean).pop();
     // Share links like https://youtu.be/ID
-    if (videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId)) return embedPlayer(
-      `https://www.youtube-nocookie.com/embed/${videoId}`, `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`);
+    if (videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId))
+      return embedPlayer(
+        `https://www.youtube-nocookie.com/embed/${videoId}`,
+        `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+      );
   }
   if (parsed.hostname === "youtu.be") {
     const videoId = parsed.pathname.replace("/", "");
-    if (videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId)) return embedPlayer(
-      `https://www.youtube-nocookie.com/embed/${videoId}`, `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`);
+    if (videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId))
+      return embedPlayer(
+        `https://www.youtube-nocookie.com/embed/${videoId}`,
+        `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+      );
   }
   if (parsed.hostname.endsWith("vimeo.com")) {
     const videoId = parsed.pathname.split("/").filter(Boolean)[0];
-    if (videoId && /^\d+$/.test(videoId)) return embedPlayer(
-      `https://player.vimeo.com/video/${videoId}`);
+    if (videoId && /^\d+$/.test(videoId))
+      return embedPlayer(`https://player.vimeo.com/video/${videoId}`);
   }
-  if (parsed.hostname.endsWith("streamable.com") && parsed.pathname.startsWith("/")) {
+  if (
+    parsed.hostname.endsWith("streamable.com") &&
+    parsed.pathname.startsWith("/")
+  ) {
     const videoId = parsed.pathname.split("/").filter(Boolean)[0];
-    if (videoId && videoId !== "") return embedPlayer(
-      `https://streamable.com/e/${videoId}?nocontrols=0`);
+    if (videoId && videoId !== "")
+      return embedPlayer(`https://streamable.com/e/${videoId}?nocontrols=0`);
   }
-  if (parsed.hostname.endsWith("loom.com") && parsed.pathname.includes("/share/")) {
+  if (
+    parsed.hostname.endsWith("loom.com") &&
+    parsed.pathname.includes("/share/")
+  ) {
     const videoId = parsed.pathname.split("/share/")[1]?.split("/")[0];
-    if (videoId && /^[a-f0-9]+$/.test(videoId)) return embedPlayer(
-      `https://www.loom.com/embed/${videoId}`);
+    if (videoId && /^[a-f0-9]+$/.test(videoId))
+      return embedPlayer(`https://www.loom.com/embed/${videoId}`);
   }
   return undefined;
 }
 
-function embedPlayer(src: string, thumbUrl?: string): { thumb: ReactNode; iframe: { src: string } } {
+function embedPlayer(
+  src: string,
+  thumbUrl?: string,
+): { thumb: ReactNode; iframe: { src: string } } {
   return {
     thumb: thumbUrl ? <img src={thumbUrl} alt="" loading="lazy" /> : null,
     iframe: { src },
@@ -137,7 +160,12 @@ export function VideoPreview({ node: _node, ...props }: MediaProps<"video">) {
   if (provider) {
     return (
       <MediaPreview title={title} thumbnail={provider.thumb}>
-        <iframe {...provider.iframe} allowFullScreen loading="lazy" title={title} />
+        <iframe
+          {...provider.iframe}
+          allowFullScreen
+          loading="lazy"
+          title={title}
+        />
       </MediaPreview>
     );
   }
