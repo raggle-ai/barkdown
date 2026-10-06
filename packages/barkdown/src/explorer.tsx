@@ -402,6 +402,7 @@ export function BarkdownExplorer({
               <DocumentContent
                 document={document}
                 documents={data?.documents}
+                root={data?.root}
                 linkComponent={relativeLink}
               />
             </article>
@@ -603,7 +604,11 @@ export function BarkdownDocument({
 
   return (
     <div className={className}>
-      <DocumentContent document={document} documents={data.documents} />
+      <DocumentContent
+        document={document}
+        documents={data.documents}
+        root={data.root}
+      />
     </div>
   );
 }
@@ -611,18 +616,24 @@ export function BarkdownDocument({
 type DocumentContentProps = {
   document: BarkdownDocument;
   documents?: BarkdownDocument[];
+  /** Absolute folder root on the local machine; enables heading copy links. */
+  root?: string;
   linkComponent?: ComponentType<AnchorHTMLAttributes<HTMLAnchorElement>>;
 };
 
 function DocumentContent({
   document,
   documents,
+  root,
   linkComponent,
 }: DocumentContentProps) {
   const content =
     document.kind === "markdown"
       ? metadata(document.content)
       : { body: document.content, entries: [] };
+  const headingCopyPath = root
+    ? `${root.replace(/[\\/]+$/, "")}/${document.path}`
+    : undefined;
 
   return (
     <article
@@ -641,9 +652,9 @@ function DocumentContent({
         />
       ) : document.kind === "markdown" ? (
         <BarkdownContent
-          collapsibleHeadings
           mode="markdown"
           value={content.body}
+          headingCopyPath={headingCopyPath}
           components={linkComponent ? { a: linkComponent } : undefined}
           htmlEmbed={(path) => {
             const resolved = resolveEmbeddedHtmlPath(document.path, path);

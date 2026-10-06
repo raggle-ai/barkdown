@@ -466,6 +466,40 @@
   position: relative;
 }
 
+.barkdown-heading-copy {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  left: -1.45em;
+  top: 0.06em;
+  width: 1.15em;
+  height: 1.15em;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25em;
+  background: none;
+  color: currentColor;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.barkdown-heading-copy svg {
+  width: 1em;
+  height: 1em;
+}
+
+.barkdown-heading-wrapper:hover .barkdown-heading-copy,
+.barkdown-heading-wrapper:focus-within .barkdown-heading-copy,
+.barkdown-heading-copy:focus-visible {
+  opacity: 0.55;
+}
+
+.barkdown-heading-copy:hover {
+  opacity: 1;
+}
+
 .barkdown-heading-toggle {
   display: flex;
   align-items: center;

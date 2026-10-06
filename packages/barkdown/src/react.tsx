@@ -1,5 +1,5 @@
 import { evaluate } from "@mdx-js/mdx";
-import { Check, ChevronDown, Copy } from "lucide-react";
+import { Check, ChevronDown, Copy, Hash } from "lucide-react";
 import {
   Children,
   type ComponentProps,
@@ -32,12 +32,18 @@ import {
   COLLAPSIBLE_SECTION_TAG,
   rehypeCollapsibleHeadings,
 } from "./rehype-collapsible-headings.js";
-import { BarkdownMermaid } from "./react-mermaid.js";
 import {
-  ImagePreview,
-  IframePreview,
-  VideoPreview,
-} from "./react-media.js";
+  CollapsibleSection,
+  type CollapsibleSectionProps,
+} from "./react-collapsible-sections.js";
+import { rehypeHeadingLines } from "./rehype-heading-lines.js";
+import {
+  HeadingCopyAnchor,
+  headingTitle as extractHeadingTitle,
+} from "./react-heading-copy.js";
+import { BarkdownMermaid } from "./react-mermaid.js";
+import { ImagePreview, IframePreview, VideoPreview } from "./react-media.js";
+import { useCopyToClipboard } from "./use-copy-to-clipboard.js";
 
 const markdownSchema = {
   ...defaultSchema,
@@ -104,6 +110,12 @@ export type BarkdownMarkdownProps = {
   collapsibleHeadings?: boolean;
   components?: BarkdownMarkdownComponents;
   copyCode?: boolean;
+  /**
+   * Local path to the document file. When set, headings show a hashtag button
+   * on hover that copies `path:line` — the heading's source line — in the
+   * style of VS Code line references.
+   */
+  headingCopyPath?: string;
   htmlEmbed?: (path: string) => string | undefined;
   linkIcons?: boolean;
   style?: CSSProperties;
@@ -136,6 +148,7 @@ export function BarkdownMarkdown({
   collapsibleHeadings = false,
   components,
   copyCode = true,
+  headingCopyPath,
   htmlEmbed,
   linkIcons = true,
   style,
@@ -152,6 +165,9 @@ export function BarkdownMarkdown({
       img: ImagePreview,
       video: VideoPreview,
       iframe: IframePreview,
+      ...(headingCopyPath && !collapsibleHeadings
+        ? headingComponents(headingCopyPath)
+        : {}),
       ...components,
     };
     // `barkdown-section` groups only exist when the rehype plugin ran.
@@ -159,12 +175,21 @@ export function BarkdownMarkdown({
     // override is merged before user components and the result is cast.
     if (collapsibleHeadings) {
       return {
-        [COLLAPSIBLE_SECTION_TAG]: CollapsibleSection,
+        [COLLAPSIBLE_SECTION_TAG]: (props: CollapsibleSectionProps) => (
+          <CollapsibleSection headingCopyPath={headingCopyPath} {...props} />
+        ),
         ...merged,
       } as MarkdownComponents;
     }
     return merged;
-  }, [collapsibleHeadings, components, copyCode, htmlEmbed, linkIcons]);
+  }, [
+    collapsibleHeadings,
+    components,
+    copyCode,
+    headingCopyPath,
+    htmlEmbed,
+    linkIcons,
+  ]);
 
   const rehypePlugins = useMemo(
     () =>
@@ -174,9 +199,16 @@ export function BarkdownMarkdown({
             sanitizeMarkdown,
             rehypeHighlight,
             rehypeKatex,
+            rehypeHeadingLines,
             rehypeCollapsibleHeadings,
           ]
-        : [rehypeRaw, sanitizeMarkdown, rehypeHighlight, rehypeKatex],
+        : [
+            rehypeRaw,
+            sanitizeMarkdown,
+            rehypeHighlight,
+            rehypeKatex,
+            rehypeHeadingLines,
+          ],
     [collapsibleHeadings],
   );
 
@@ -202,85 +234,49 @@ export function BarkdownMarkdown({
   );
 }
 
-type CollapsibleSectionProps = {
-  children?: ReactNode;
-};
+const HEADING_LEVELS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
 
-/**
- * Interactive section rendered for each `barkdown-section` tree group.
- * Sections are open by default so an upgrade never hides content. The real
- * `button` carries `aria-expanded` and `aria-controls`, which gives keyboard
- * operation and screen-reader state for free.
- */
-function CollapsibleSection({ children }: CollapsibleSectionProps) {
-  const [open, setOpen] = useState(true);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const childArray = Children.toArray(children);
-  const headingIndex = childArray.findIndex((child) => isValidElement(child));
-  const heading = headingIndex >= 0 ? childArray[headingIndex] : null;
-  const content = childArray.filter((_, index) => index !== headingIndex);
-  const headingId =
-    isValidElement<{ id?: string }>(heading) &&
-    typeof heading.props.id === "string"
-      ? heading.props.id
+function headingComponents(path: string): Record<string, ComponentType<any>> {
+  return Object.fromEntries(
+    HEADING_LEVELS.map((tag) => [
+      tag,
+      (props: BarkdownElementProps<(typeof HEADING_LEVELS)[number]>) => (
+        <HeadingWithCopy path={path} tag={tag} {...props} />
+      ),
+    ]),
+  );
+}
+
+function HeadingWithCopy({
+  path,
+  tag,
+  children,
+  node: _node,
+  ...props
+}: {
+  path: string;
+  tag: (typeof HEADING_LEVELS)[number];
+} & BarkdownElementProps<(typeof HEADING_LEVELS)[number]>) {
+  const Tag = tag;
+  const attributes = props as Record<string, unknown>;
+  const line =
+    typeof attributes["data-barkdown-line"] === "string"
+      ? attributes["data-barkdown-line"]
       : undefined;
-  const contentId = headingId ? `${headingId}-content` : undefined;
+  const className = joinClassNames(
+    "barkdown-heading-wrapper",
+    typeof props.className === "string" ? props.className : undefined,
+  );
 
-  // A fragment link must open every closed ancestor section before the
-  // browser moves to the target. Headings have stable IDs, so deep links keep
-  // working after a reader collapses a section.
-  useEffect(() => {
-    const openFragmentAncestors = () => {
-      const hash = window.location.hash;
-      if (hash.length < 2) return;
-      const target = document.getElementById(decodeURIComponent(hash.slice(1)));
-      if (target && contentRef.current?.contains(target)) {
-        setOpen(true);
-      }
-    };
-
-    openFragmentAncestors();
-    window.addEventListener("hashchange", openFragmentAncestors);
-    return () =>
-      window.removeEventListener("hashchange", openFragmentAncestors);
-  }, []);
-
-  const toggleHeading =
-    isValidElement<{ children?: ReactNode }>(heading) && contentId
-      ? cloneElement(
-          heading,
-          {},
-          <button
-            type="button"
-            className="barkdown-heading-toggle"
-            aria-expanded={open}
-            aria-controls={contentId}
-            onClick={() => setOpen((current) => !current)}
-          >
-            <span className="barkdown-heading-toggle-label">
-              {heading.props.children}
-            </span>
-            <ChevronDown
-              aria-hidden="true"
-              className="barkdown-heading-toggle-icon"
-              size={18}
-            />
-          </button>,
-        )
-      : heading;
+  const title = extractHeadingTitle(children);
 
   return (
-    <section data-barkdown-section="">
-      {toggleHeading}
-      <div
-        ref={contentRef}
-        id={contentId}
-        className="barkdown-section-content"
-        hidden={!open}
-      >
-        {content}
-      </div>
-    </section>
+    <Tag {...props} className={className}>
+      {children}
+      {path && line ? (
+        <HeadingCopyAnchor line={line} path={path} title={title} />
+      ) : null}
+    </Tag>
   );
 }
 
@@ -413,7 +409,7 @@ export function CodeBlock({
   copy?: boolean;
   htmlEmbed?: (path: string) => string | undefined;
 }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy: copyText } = useCopyToClipboard();
   const text = String(children ?? "").replace(/\n$/, "");
   const language = /(?:^|\s)language-([\w+-]+)/
     .exec(className ?? "")?.[1]
@@ -465,10 +461,7 @@ export function CodeBlock({
           data-barkdown-code-copy=""
           type="button"
           onClick={() => {
-            void navigator.clipboard.writeText(text).then(() => {
-              setCopied(true);
-              window.setTimeout(() => setCopied(false), 1800);
-            });
+            copyText(text);
           }}
         >
           {copied ? (
