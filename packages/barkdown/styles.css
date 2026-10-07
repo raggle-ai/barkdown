@@ -466,12 +466,16 @@
   position: relative;
 }
 
+.barkdown-heading-copyable {
+  cursor: pointer;
+}
+
 .barkdown-heading-copy {
   position: absolute;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  left: -1.45em;
+  right: -1.45em;
   top: 0.06em;
   width: 1.15em;
   height: 1.15em;
@@ -482,7 +486,18 @@
   color: currentColor;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 140ms ease;
+  transform: translateX(0.3em);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.barkdown-heading-copy-inline {
+  position: static;
+  top: auto;
+  right: auto;
+  margin-left: 0.35em;
+  vertical-align: middle;
 }
 
 .barkdown-heading-copy svg {
@@ -494,6 +509,7 @@
 .barkdown-heading-wrapper:focus-within .barkdown-heading-copy,
 .barkdown-heading-copy:focus-visible {
   opacity: 0.55;
+  transform: translateX(0);
 }
 
 .barkdown-heading-copy:hover {

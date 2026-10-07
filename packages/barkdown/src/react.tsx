@@ -39,6 +39,7 @@ import {
 import { rehypeHeadingLines } from "./rehype-heading-lines.js";
 import {
   HeadingCopyAnchor,
+  headingReference,
   headingTitle as extractHeadingTitle,
 } from "./react-heading-copy.js";
 import { BarkdownMermaid } from "./react-mermaid.js";
@@ -257,6 +258,7 @@ function HeadingWithCopy({
   path: string;
   tag: (typeof HEADING_LEVELS)[number];
 } & BarkdownElementProps<(typeof HEADING_LEVELS)[number]>) {
+  const { copied, copy } = useCopyToClipboard();
   const Tag = tag;
   const attributes = props as Record<string, unknown>;
   const line =
@@ -269,12 +271,26 @@ function HeadingWithCopy({
   );
 
   const title = extractHeadingTitle(children);
+  const copyable = Boolean(path && line);
+  const target = copyable ? headingReference(path, line, title) : undefined;
 
   return (
-    <Tag {...props} className={className}>
+    <Tag
+      {...props}
+      className={joinClassNames(
+        className,
+        copyable ? "barkdown-heading-copyable" : undefined,
+      )}
+      onClick={copyable ? () => copy(target!) : undefined}
+    >
       {children}
-      {path && line ? (
-        <HeadingCopyAnchor line={line} path={path} title={title} />
+      {target ? (
+        <HeadingCopyAnchor
+          copied={copied}
+          inline
+          onCopy={() => copy(target)}
+          target={target}
+        />
       ) : null}
     </Tag>
   );

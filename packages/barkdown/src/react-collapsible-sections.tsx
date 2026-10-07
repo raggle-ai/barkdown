@@ -11,8 +11,10 @@ import {
 
 import {
   HeadingCopyAnchor,
+  headingReference,
   headingTitle as extractHeadingTitle,
 } from "./react-heading-copy.js";
+import { useCopyToClipboard } from "./use-copy-to-clipboard.js";
 
 export type CollapsibleSectionProps = {
   children?: ReactNode;
@@ -30,6 +32,7 @@ export function CollapsibleSection({
   headingCopyPath,
 }: CollapsibleSectionProps) {
   const { open, toggle, contentRef } = useSectionToggle();
+  const { copied, copy } = useCopyToClipboard();
 
   const childArray = Children.toArray(children);
   const headingIndex = childArray.findIndex((child) => isValidElement(child));
@@ -48,22 +51,24 @@ export function CollapsibleSection({
       ? heading.props["data-barkdown-line"]
       : undefined;
 
-  // The heading is not mounted yet during render, so read the title from its
-  // own children instead of querying the DOM.
-  const headingTitle = isValidElement<{ children?: ReactNode }>(heading)
+  const title = isValidElement<{ children?: ReactNode }>(heading)
     ? extractHeadingTitle(heading.props.children)
     : undefined;
+  const target =
+    headingCopyPath && headingLine
+      ? headingReference(headingCopyPath, headingLine, title)
+      : undefined;
 
   const toggleHeading =
     isValidElement<{ children?: ReactNode }>(heading) && contentId
       ? cloneElement(
           heading,
           {},
-          headingCopyPath && headingLine ? (
+          target ? (
             <HeadingCopyAnchor
-              line={headingLine}
-              path={headingCopyPath}
-              title={headingTitle}
+              copied={copied}
+              onCopy={() => copy(target)}
+              target={target}
             />
           ) : null,
           <button

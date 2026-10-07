@@ -4,30 +4,36 @@ import { isValidElement, type ReactNode } from "react";
 import { useCopyToClipboard } from "./use-copy-to-clipboard.js";
 
 /**
- * Hashtag button shown on a heading's hover. Copies a VS Code-style
+ * Hashtag button for a heading hover. Copy target is a VS Code-style
  * `path:line [title]` reference to the heading's Markdown source line.
+ *
+ * `inline` places the button right after the heading text; without it the
+ * button sits in the right gutter (used inside collapsible section toggles).
  */
 export function HeadingCopyAnchor({
-  path,
-  line,
-  title,
+  target,
+  copied,
+  onCopy,
+  inline,
 }: {
-  path: string;
-  line: string;
-  title?: string;
+  target: string;
+  copied: boolean;
+  onCopy: () => void;
+  inline?: boolean;
 }) {
-  const { copied, copy } = useCopyToClipboard();
-  const target = `${path}:${line}${title ? ` [${title}]` : ""}`;
-
   return (
     <button
       type="button"
-      className="barkdown-heading-copy"
+      className={
+        inline
+          ? "barkdown-heading-copy barkdown-heading-copy-inline"
+          : "barkdown-heading-copy"
+      }
       aria-label={`Copy heading reference ${target}`}
       title={`Copy ${target}`}
       onClick={(event) => {
         event.stopPropagation();
-        copy(target);
+        onCopy();
       }}
     >
       {copied ? (
@@ -37,6 +43,15 @@ export function HeadingCopyAnchor({
       )}
     </button>
   );
+}
+
+/** VS Code-style reference: file path, heading line, and header name. */
+export function headingReference(
+  path: string,
+  line: string | undefined,
+  title: string | undefined,
+): string {
+  return `${path}:${line ?? "?"}${title ? ` [${title}]` : ""}`;
 }
 
 /** Plain text of a heading's children, for the copyable reference. */
