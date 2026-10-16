@@ -1,5 +1,5 @@
 import { evaluate } from "@mdx-js/mdx";
-import { Check, ChevronDown, Copy, Hash } from "lucide-react";
+import { Check, ChevronDown, Copy, Hash, Link2 } from "lucide-react";
 import {
   Children,
   type ComponentProps,
@@ -117,7 +117,10 @@ export type BarkdownMarkdownProps = {
    * style of VS Code line references.
    */
   headingCopyPath?: string;
-  htmlEmbed?: (path: string) => string | undefined;
+  /** Resolves companion HTML, from a dataset or an asynchronous host reader. */
+  htmlEmbed?: (
+    path: string,
+  ) => string | undefined | Promise<string | undefined>;
   linkIcons?: boolean;
   style?: CSSProperties;
 };
@@ -160,7 +163,12 @@ export function BarkdownMarkdown({
       a: ({ node: _node, ...props }: BarkdownElementProps<"a">) =>
         linkIcons ? <BarkdownLink {...props} /> : <a {...props} />,
       code: (props: BarkdownCodeProps) => (
-        <CodeBlock copy={copyCode} htmlEmbed={htmlEmbed} {...props} />
+        <CodeBlock
+          copy={copyCode}
+          documentPath={headingCopyPath}
+          htmlEmbed={htmlEmbed}
+          {...props}
+        />
       ),
       pre: (props: ComponentProps<"pre">) => <PreBlock {...props} />,
       img: ImagePreview,
@@ -413,17 +421,152 @@ export function BarkdownMdx({
   );
 }
 
+function HtmlEmbed({
+  path,
+  documentPath,
+  resolve,
+}: {
+  path: string;
+  documentPath?: string;
+  resolve: BarkdownMarkdownProps["htmlEmbed"];
+}) {
+  const source = useMemo(
+    () => (path && !path.includes("\n") ? resolve?.(path) : undefined),
+    [path, resolve],
+  );
+  const pending = typeof source === "string" ? undefined : source;
+  const [result, setResult] = useState<{
+    pending: Promise<string | undefined>;
+    source?: string;
+    failed?: boolean;
+  }>();
+  useEffect(() => {
+    if (!pending) return;
+    let active = true;
+    void pending.then(
+      (source) => {
+        if (active) setResult({ pending, source });
+      },
+      () => {
+        if (active) setResult({ pending, failed: true });
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [pending]);
+
+  if (pending && result?.pending !== pending) {
+    return <span role="status">Loading HTML visualization…</span>;
+  }
+  const loaded = pending && result?.pending === pending ? result : undefined;
+  const html = typeof source === "string" ? source : loaded?.source;
+  if (!html) {
+    return (
+      <span data-barkdown-html-embed-error="">
+        {loaded?.failed
+          ? "Could not load HTML visualization"
+          : "HTML visualization not found"}
+        : {path || "missing path"}
+      </span>
+    );
+  }
+  const filename = path.split("/").at(-1) ?? path;
+  const title = filename.replace(/\.html?$/i, "").replaceAll(/[-_]/g, " ");
+  const filePath = documentPath
+    ? `${documentPath.slice(0, documentPath.lastIndexOf("/") + 1)}${path}`
+    : path;
+  return <HtmlPreview html={html} path={filePath} title={title} />;
+}
+
+function HtmlPreview({
+  html,
+  path,
+  title,
+}: {
+  html: string;
+  path: string;
+  title: string;
+}) {
+  const { copied, copy } = useCopyToClipboard();
+  const [link, setLink] = useState<{ html: string; href: string }>();
+  useEffect(() => {
+    // Keep the new tab sandboxed too: a raw HTML blob would inherit host access.
+    const page = document.implementation.createHTMLDocument(title);
+    const charset = page.createElement("meta");
+    charset.setAttribute("charset", "utf-8");
+    page.head.prepend(charset);
+    page.documentElement.style.height = "100%";
+    page.body.style.cssText = "margin:0;height:100%";
+    const frame = page.createElement("iframe");
+    frame.setAttribute("sandbox", "allow-scripts");
+    frame.title = title;
+    frame.srcdoc = html;
+    frame.style.cssText = "display:block;width:100%;height:100%;border:0";
+    page.body.append(frame);
+    const href = URL.createObjectURL(
+      new Blob(["<!doctype html>", page.documentElement.outerHTML], {
+        type: "text/html;charset=utf-8",
+      }),
+    );
+    setLink({ html, href });
+    return () => URL.revokeObjectURL(href);
+  }, [html, title]);
+
+  return (
+    <figure data-barkdown-html-preview="" aria-label={title}>
+      <figcaption data-barkdown-html-toolbar="">
+        <span>{title}</span>
+        <span data-barkdown-html-actions="">
+          <button
+            type="button"
+            aria-label={
+              copied ? "HTML file path copied" : "Copy HTML file path"
+            }
+            title={`Copy HTML file path: ${path}`}
+            onClick={() => copy(path)}
+          >
+            {copied ? (
+              <Check aria-hidden="true" />
+            ) : (
+              <Copy aria-hidden="true" />
+            )}
+          </button>
+          <a
+            data-barkdown-html-open=""
+            aria-label="Open HTML"
+            title="Open HTML"
+            href={link?.html === html ? link.href : undefined}
+            rel="noopener noreferrer"
+          >
+            <Link2 aria-hidden="true" />
+          </a>
+        </span>
+      </figcaption>
+      <iframe
+        data-barkdown-html-embed=""
+        loading="lazy"
+        sandbox="allow-scripts"
+        srcDoc={html}
+        title={title}
+      />
+    </figure>
+  );
+}
+
 export function CodeBlock({
   children,
   className,
   copy = true,
+  documentPath,
   htmlEmbed,
   inline,
   node: _node,
   ...props
 }: BarkdownCodeProps & {
   copy?: boolean;
-  htmlEmbed?: (path: string) => string | undefined;
+  documentPath?: string;
+  htmlEmbed?: BarkdownMarkdownProps["htmlEmbed"];
 }) {
   const { copied, copy: copyText } = useCopyToClipboard();
   const text = String(children ?? "").replace(/\n$/, "");
@@ -436,24 +579,11 @@ export function CodeBlock({
     return <BarkdownMermaid diagram={text} />;
   }
   if (language === "barkdown-html") {
-    const path = text.trim();
-    const source = path && !path.includes("\n") ? htmlEmbed?.(path) : undefined;
-    if (!source) {
-      return (
-        <span data-barkdown-html-embed-error="">
-          HTML visualization not found: {path || "missing path"}
-        </span>
-      );
-    }
-    const filename = path.split("/").at(-1) ?? path;
-    const title = filename.replace(/\.html?$/i, "").replaceAll(/[-_]/g, " ");
     return (
-      <iframe
-        data-barkdown-html-embed=""
-        loading="lazy"
-        sandbox="allow-scripts"
-        srcDoc={source}
-        title={title}
+      <HtmlEmbed
+        path={text.trim()}
+        documentPath={documentPath}
+        resolve={htmlEmbed}
       />
     );
   }

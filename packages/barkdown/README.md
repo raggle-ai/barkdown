@@ -30,6 +30,39 @@ Pass `collapsibleHeadings` to turn each heading into a section control. The sect
 <BarkdownContent mode="markdown" value={value} collapsibleHeadings />
 ```
 
+## Interactive HTML in Markdown
+
+Use a `barkdown-html` fence with one document-relative companion path:
+
+````markdown
+```barkdown-html
+cli-variations.html
+```
+````
+
+`BarkdownExplorer` and `BarkdownDocument` resolve companions from their loaded
+folder dataset. Hosts that import `BarkdownContent` directly must supply
+`htmlEmbed`. The resolver can return HTML immediately or return a promise:
+
+```tsx
+<BarkdownContent mode="markdown" value={value} htmlEmbed={readCompanionHtml} />
+```
+
+The host reader must resolve the path relative to the Markdown document and
+restrict reads to its permitted folder. Return `undefined` for missing or
+refused files. Keep the reader stable across renders, for example with
+`useCallback`.
+
+BarkDown shows a loading state while a promise is pending, reports missing
+files and failed reads, and renders the HTML in an isolated iframe with
+`sandbox="allow-scripts"`. The preview bar has two icons: **Copy HTML file
+path** and **Open HTML**. The copy icon uses the Markdown file's
+`headingCopyPath` to copy the companion's local path, or copies the relative
+companion path when no document path is available. The link uses normal browser
+behaviour: click for the current tab, Command-click or Ctrl-click for a new tab.
+The full preview keeps the same isolation and does not grant access to the host
+page. Standalone HTML documents in the explorer remain script-blocked.
+
 ## Folder explorer
 
 ```tsx

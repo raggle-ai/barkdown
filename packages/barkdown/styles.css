@@ -437,12 +437,66 @@
   padding: 1rem;
 }
 
+[data-barkdown-html-preview] {
+  margin: 1rem 0;
+  overflow: hidden;
+  border: 1px solid #d9d8d2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+[data-barkdown-html-toolbar] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid #d9d8d2;
+  color: var(--barkdown-muted-color, #626b63);
+  font-size: 0.85rem;
+}
+
+[data-barkdown-html-actions] {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+[data-barkdown-html-actions] > :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+[data-barkdown-html-actions] > :is(a, button):hover {
+  background: #f4f6f3;
+  color: var(--barkdown-link-hover-color, #124c88);
+}
+
+[data-barkdown-html-actions] > :is(a, button):focus-visible {
+  outline: 2px solid var(--barkdown-focus-color, #327751);
+  outline-offset: 2px;
+}
+
+[data-barkdown-html-actions] svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 [data-barkdown-html-embed] {
   display: block;
   width: 100%;
   min-height: 560px;
-  border: 1px solid #d9d8d2;
-  border-radius: 12px;
+  border: 0;
   background: #fff;
 }
 
@@ -458,7 +512,6 @@
 @media (max-width: 760px) {
   [data-barkdown-html-embed] {
     min-height: 68vh;
-    border-radius: 8px;
   }
 }
 
