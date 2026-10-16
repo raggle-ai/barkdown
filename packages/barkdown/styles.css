@@ -501,7 +501,7 @@
 [data-barkdown-html-embed] {
   display: block;
   width: 100%;
-  min-height: 560px;
+  min-height: 320px;
   border: 0;
   background: #fff;
 }
@@ -513,12 +513,6 @@
   background: #fff1f1;
   color: #8a1c1c;
   padding: 12px 14px;
-}
-
-@media (max-width: 760px) {
-  [data-barkdown-html-embed] {
-    min-height: 68vh;
-  }
 }
 
 .barkdown-heading-wrapper {

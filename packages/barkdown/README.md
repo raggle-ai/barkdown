@@ -64,8 +64,10 @@ The copy icon uses the Markdown file's
 `headingCopyPath` to copy the companion's local path, or copies the relative
 companion path when no document path is available. The link uses normal browser
 behaviour: click for the current tab, Command-click or Ctrl-click for a new tab.
-The full preview keeps the same isolation and does not grant access to the host
-page. Standalone HTML documents in the explorer remain script-blocked.
+The embedded preview has a 320 px minimum height on all screen sizes. Use the
+link for a full-window preview. The full preview keeps the same isolation and
+does not grant access to the host page. Standalone HTML documents in the explorer
+remain script-blocked.
 
 ## Folder explorer
 
