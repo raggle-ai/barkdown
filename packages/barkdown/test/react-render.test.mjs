@@ -78,7 +78,7 @@ test("markdown image with a hosted video URL renders a player like Obsidian", ()
   // nocookie embed loads only when the reader expands the card.
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {
-      value: '![](https://www.youtube.com/watch?v=dQw4w9WgXcQ)',
+      value: "![](https://www.youtube.com/watch?v=dQw4w9WgXcQ)",
     }),
   );
   assert.match(
@@ -93,7 +93,7 @@ test("markdown image with alt text still images external image URLs", () => {
   // Obsidian's external image syntax: ![alt](https://...jpg)
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {
-      value: '![Engelbart](https://example.com/Engelbart.jpg)',
+      value: "![Engelbart](https://example.com/Engelbart.jpg)",
     }),
   );
   assert.match(html, /src="https:\/\/example\.com\/Engelbart\.jpg"/);
@@ -120,7 +120,8 @@ test("raw iframe embeds render as collapsible previews", () => {
   // Collapsed, the iframe document itself is not mounted.
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {
-      value: '<iframe src="https://example.com/embed/xyz" title="Demo"></iframe>',
+      value:
+        '<iframe src="https://example.com/embed/xyz" title="Demo"></iframe>',
     }),
   );
   assert.match(html, /aria-expanded="false"/);
@@ -143,7 +144,8 @@ test("raw iframe embeds keep explicit titles and drop unsafe attributes", () => 
 test("raw iframe embeds without titles derive a name from the URL", () => {
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {
-      value: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>',
+      value:
+        '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>',
     }),
   );
   assert.match(html, /YouTube video dQw4w9WgXcQ/);
@@ -162,7 +164,7 @@ test("raw iframe embeds reject javascript: URLs and get no iframe element", () =
 test("markdown image with a raw data URL is not treated as hosted video", () => {
   const html = renderToStaticMarkup(
     createElement(BarkdownMarkdown, {
-      value: '![](data:image/png;base64,iVBORw0KGgo=)',
+      value: "![](data:image/png;base64,iVBORw0KGgo=)",
     }),
   );
   assert.doesNotMatch(html, /youtube-nocookie|iframe/);

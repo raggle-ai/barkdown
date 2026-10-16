@@ -7,7 +7,9 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [
     react(),
-    barkdownPlugin(process.env.BARKDOWN_PREVIEW_ROOT ?? resolve("../../examples")),
+    barkdownPlugin(
+      process.env.BARKDOWN_PREVIEW_ROOT ?? resolve("../../examples"),
+    ),
   ],
   resolve: {
     dedupe: ["react", "react-dom"],

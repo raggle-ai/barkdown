@@ -487,6 +487,12 @@
   outline-offset: 2px;
 }
 
+[data-barkdown-html-actions] > :disabled,
+[data-barkdown-html-actions] > [aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 [data-barkdown-html-actions] svg {
   width: 1rem;
   height: 1rem;

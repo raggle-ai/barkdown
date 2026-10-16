@@ -25,13 +25,25 @@ Use real, descriptive alt text — it becomes the preview title when no
 attribute (it becomes the card title):
 
 ```html
-<img src="https://example.com/picture.jpg" title="Poster title" width="480" alt="Descriptive alt">
+<img
+  src="https://example.com/picture.jpg"
+  title="Poster title"
+  width="480"
+  alt="Descriptive alt"
+/>
 ```
 
 ### Inline MP4 video
 
 ```html
-<video title="Visible card title" controls preload="metadata" playsinline width="800" src="https://…/video.mp4"></video>
+<video
+  title="Visible card title"
+  controls
+  preload="metadata"
+  playsinline
+  width="800"
+  src="https://…/video.mp4"
+></video>
 ```
 
 Key attributes BarkDown relies on:
@@ -47,7 +59,7 @@ Source-element form is also supported:
 
 ```html
 <video title="Title" controls preload="metadata" playsinline>
-  <source src="https://…/video.mp4" type="video/mp4">
+  <source src="https://…/video.mp4" type="video/mp4" />
 </video>
 ```
 
@@ -74,7 +86,13 @@ plain image behaviour, so an author can force image treatment of a video URL.
 in the hosted player on expand:
 
 ```html
-<video title="Talk title" controls preload="metadata" playsinline src="https://www.youtube.com/watch?v=VIDEO_ID"></video>
+<video
+  title="Talk title"
+  controls
+  preload="metadata"
+  playsinline
+  src="https://www.youtube.com/watch?v=VIDEO_ID"
+></video>
 ```
 
 `youtu.be/<id>`, `youtube.com/watch?v=<id>`, `youtube.com/embed/<id>`,

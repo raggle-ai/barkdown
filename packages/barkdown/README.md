@@ -55,8 +55,12 @@ refused files. Keep the reader stable across renders, for example with
 
 BarkDown shows a loading state while a promise is pending, reports missing
 files and failed reads, and renders the HTML in an isolated iframe with
-`sandbox="allow-scripts"`. The preview bar has two icons: **Copy HTML file
-path** and **Open HTML**. The copy icon uses the Markdown file's
+`sandbox="allow-scripts"`. The preview bar has three icons: **Reload HTML**,
+**Copy HTML file path**, and **Open HTML**. Reload calls the reader again and
+restarts the embedded page, including when the returned HTML has not changed.
+The reload control also remains available after a failed read. A host reader
+should read the current file on each call so saved edits appear on reload.
+The copy icon uses the Markdown file's
 `headingCopyPath` to copy the companion's local path, or copies the relative
 companion path when no document path is available. The link uses normal browser
 behaviour: click for the current tab, Command-click or Ctrl-click for a new tab.

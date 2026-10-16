@@ -1,5 +1,5 @@
 import { evaluate } from "@mdx-js/mdx";
-import { Check, ChevronDown, Copy, Hash, Link2 } from "lucide-react";
+import { Check, ChevronDown, Copy, Hash, Link2, RotateCw } from "lucide-react";
 import {
   Children,
   type ComponentProps,
@@ -430,9 +430,10 @@ function HtmlEmbed({
   documentPath?: string;
   resolve: BarkdownMarkdownProps["htmlEmbed"];
 }) {
+  const [revision, setRevision] = useState(0);
   const source = useMemo(
     () => (path && !path.includes("\n") ? resolve?.(path) : undefined),
-    [path, resolve],
+    [path, resolve, revision],
   );
   const pending = typeof source === "string" ? undefined : source;
   const [result, setResult] = useState<{
@@ -456,41 +457,64 @@ function HtmlEmbed({
     };
   }, [pending]);
 
-  if (pending && result?.pending !== pending) {
-    return <span role="status">Loading HTML visualization…</span>;
-  }
+  const loading = Boolean(pending && result?.pending !== pending);
   const loaded = pending && result?.pending === pending ? result : undefined;
   const html = typeof source === "string" ? source : loaded?.source;
-  if (!html) {
-    return (
-      <span data-barkdown-html-embed-error="">
-        {loaded?.failed
-          ? "Could not load HTML visualization"
-          : "HTML visualization not found"}
-        : {path || "missing path"}
-      </span>
-    );
-  }
   const filename = path.split("/").at(-1) ?? path;
   const title = filename.replace(/\.html?$/i, "").replaceAll(/[-_]/g, " ");
   const filePath = documentPath
     ? `${documentPath.slice(0, documentPath.lastIndexOf("/") + 1)}${path}`
     : path;
-  return <HtmlPreview html={html} path={filePath} title={title} />;
+  return (
+    <HtmlPreview
+      html={html}
+      path={filePath}
+      title={title}
+      loading={loading}
+      onReload={() => setRevision((value) => value + 1)}
+    >
+      {loading ? (
+        <span role="status">Loading HTML visualization…</span>
+      ) : html ? (
+        <iframe
+          key={revision}
+          data-barkdown-html-embed=""
+          loading="lazy"
+          sandbox="allow-scripts"
+          srcDoc={html}
+          title={title}
+        />
+      ) : (
+        <span data-barkdown-html-embed-error="">
+          {loaded?.failed
+            ? "Could not load HTML visualization"
+            : "HTML visualization not found"}
+          : {path || "missing path"}
+        </span>
+      )}
+    </HtmlPreview>
+  );
 }
 
 function HtmlPreview({
+  children,
   html,
+  loading,
+  onReload,
   path,
   title,
 }: {
-  html: string;
+  children: ReactNode;
+  html?: string;
+  loading: boolean;
+  onReload: () => void;
   path: string;
   title: string;
 }) {
   const { copied, copy } = useCopyToClipboard();
   const [link, setLink] = useState<{ html: string; href: string }>();
   useEffect(() => {
+    if (!html) return;
     // Keep the new tab sandboxed too: a raw HTML blob would inherit host access.
     const page = document.implementation.createHTMLDocument(title);
     const charset = page.createElement("meta");
@@ -520,6 +544,15 @@ function HtmlPreview({
         <span data-barkdown-html-actions="">
           <button
             type="button"
+            aria-label="Reload HTML"
+            title="Reload HTML"
+            disabled={loading}
+            onClick={onReload}
+          >
+            <RotateCw aria-hidden="true" />
+          </button>
+          <button
+            type="button"
             aria-label={
               copied ? "HTML file path copied" : "Copy HTML file path"
             }
@@ -536,20 +569,15 @@ function HtmlPreview({
             data-barkdown-html-open=""
             aria-label="Open HTML"
             title="Open HTML"
-            href={link?.html === html ? link.href : undefined}
+            href={html && link?.html === html ? link.href : undefined}
+            aria-disabled={!html || undefined}
             rel="noopener noreferrer"
           >
             <Link2 aria-hidden="true" />
           </a>
         </span>
       </figcaption>
-      <iframe
-        data-barkdown-html-embed=""
-        loading="lazy"
-        sandbox="allow-scripts"
-        srcDoc={html}
-        title={title}
-      />
+      {children}
     </figure>
   );
 }
