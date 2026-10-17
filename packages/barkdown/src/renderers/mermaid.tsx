@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from "react";
 
-import { defaultMermaidConfig, mermaidId } from "./mermaid.js";
+import { defaultMermaidConfig, mermaidId } from "../mermaid.js";
 
 let renderQueue = Promise.resolve();
 

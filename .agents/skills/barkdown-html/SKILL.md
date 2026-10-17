@@ -145,7 +145,8 @@ Open the HTML file directly from the sidebar only to check its static form;
 its scripts are blocked there. Use [barkdown-preview](../barkdown-preview/SKILL.md) to verify
 the preview URL.
 
-Implementation references: `CodeBlock` and `markdownSchema` in
+Implementation references: `CodeBlock` in
+[code.tsx](../../../packages/barkdown/src/renderers/code.tsx), `markdownSchema` in
 [react.tsx](../../../packages/barkdown/src/react.tsx), plus
 `resolveEmbeddedHtmlPath` and `DocumentContent` in
 [explorer.tsx](../../../packages/barkdown/src/explorer.tsx).

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { parseDocument } from "yaml";
 
-import { LinkIcon } from "./link.js";
+import { LinkIcon } from "./renderers/link.js";
 import {
   documentKind,
   documentMatches,
