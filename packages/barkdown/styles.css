@@ -437,6 +437,58 @@
   padding: 1rem;
 }
 
+[data-barkdown-text-preview] {
+  margin: 1rem 0;
+  overflow: hidden;
+  border: 1px solid #d9d8d2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+[data-barkdown-text-preview] figcaption {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid #d9d8d2;
+  color: var(--barkdown-muted-color, #626b63);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+[data-barkdown-text-preview] > iframe,
+[data-barkdown-file-viewport] {
+  display: block;
+  width: 100%;
+  height: min(520px, 60vh);
+  min-height: 240px;
+  border: 0;
+}
+
+[data-barkdown-file-viewport] {
+  box-sizing: border-box;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 1rem;
+}
+
+[data-barkdown-file-viewport]:focus-visible {
+  outline: 2px solid var(--barkdown-focus-color, #0969da);
+  outline-offset: -2px;
+}
+
+[data-barkdown] [data-barkdown-csv-table] {
+  display: table;
+  max-width: none;
+}
+
+[data-barkdown-csv-table] :is(th, td) {
+  white-space: pre-wrap;
+  min-width: 6rem;
+}
+
+[data-barkdown-text-preview] > [role="status"] {
+  display: block;
+  padding: 1rem;
+}
+
 [data-barkdown-html-preview] {
   margin: 1rem 0;
   overflow: hidden;

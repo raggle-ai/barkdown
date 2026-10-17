@@ -1,0 +1,5 @@
+{
+  "name": "BarkDown",
+  "embedTypes": ["html", "markdown", "text", "json", "yaml", "csv"],
+  "scrollable": true
+}

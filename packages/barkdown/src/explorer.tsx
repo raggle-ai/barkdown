@@ -88,6 +88,8 @@ export const resolveEmbeddedHtmlPath = (
   return new URL(htmlPath, baseUrl).pathname.slice(1);
 };
 
+export const resolveEmbeddedTextPath = resolveEmbeddedHtmlPath;
+
 function tree(documents: BarkdownDocument[]) {
   const root: FolderNode = { folders: new Map(), documents: [] };
   for (const document of documents) {
@@ -658,10 +660,15 @@ function DocumentContent({
           components={linkComponent ? { a: linkComponent } : undefined}
           htmlEmbed={(path) => {
             const resolved = resolveEmbeddedHtmlPath(document.path, path);
-            const embedded = documents?.find(
+            return documents?.find(
               (item) => item.kind === "html" && item.path === resolved,
-            );
-            return embedded?.content;
+            )?.content;
+          }}
+          textEmbed={(path) => {
+            const resolved = resolveEmbeddedTextPath(document.path, path);
+            return documents?.find(
+              (item) => item.path === resolved && item.kind !== "html",
+            )?.content;
           }}
         />
       ) : (

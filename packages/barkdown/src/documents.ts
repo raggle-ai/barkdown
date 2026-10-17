@@ -7,13 +7,17 @@ export const extensions = new Set([
   ".md",
   ".text",
   ".txt",
+  ".json",
+  ".yaml",
+  ".yml",
+  ".csv",
 ]);
 
 export function documentKind(path: string): BarkdownKind | undefined {
   const extension = path.slice(path.lastIndexOf(".")).toLowerCase();
   if (extension === ".htm" || extension === ".html") return "html";
   if (extension === ".md" || extension === ".markdown") return "markdown";
-  if (extension === ".text" || extension === ".txt") return "text";
+  if (extensions.has(extension)) return "text";
   return undefined;
 }
 

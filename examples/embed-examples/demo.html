@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Embedded demo</title>
+    <style>
+      body {
+        font: 16px system-ui;
+        padding: 1.5rem;
+      }
+      button {
+        padding: 0.5rem 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Interactive HTML file</h1>
+    <button type="button" onclick="this.nextElementSibling.hidden = false">
+      Show message
+    </button>
+    <p hidden>This HTML file runs inside a sandboxed BarkDown preview.</p>
+  </body>
+</html>

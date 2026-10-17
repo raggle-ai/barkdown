@@ -1,0 +1,6 @@
+name,role,active,notes
+Ada Lovelace,Engineer,true,"Uses tables, lists, and code"
+Grace Hopper,Engineer,true,"Says ""Hello"""
+Example person,Reader,false,"First line
+Second line"
+Literal markup,Reader,true,<strong>Text only</strong>

@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@mdx-js/mdx": "^3.1.1",
+    "d3-dsv": "^3.0.1",
     "gemoji": "^8.1.0",
     "highlight.js": "^11.11.1",
     "katex": "^0.18.1",
@@ -80,6 +81,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "@types/d3-dsv": "^3.0.7",
     "@types/node": "^22.13.4",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.0.0",

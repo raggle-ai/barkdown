@@ -75,6 +75,9 @@ importers:
       '@mdx-js/mdx':
         specifier: ^3.1.1
         version: 3.1.1
+      d3-dsv:
+        specifier: ^3.0.1
+        version: 3.0.1
       gemoji:
         specifier: ^8.1.0
         version: 8.1.0
@@ -121,6 +124,9 @@ importers:
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
+      '@types/d3-dsv':
+        specifier: ^3.0.7
+        version: 3.0.7
       '@types/node':
         specifier: ^22.13.4
         version: 22.20.1

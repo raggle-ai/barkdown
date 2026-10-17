@@ -4,6 +4,7 @@ import { type ComponentProps, isValidElement } from "react";
 import { useCopyToClipboard } from "../use-copy-to-clipboard.js";
 import { HtmlEmbed, type HtmlEmbedResolver } from "./html.js";
 import { BarkdownMermaid } from "./mermaid.js";
+import { TextEmbed, type TextEmbedResolver } from "./text.js";
 
 export type BarkdownCodeProps = ComponentProps<"code"> & {
   inline?: boolean;
@@ -22,7 +23,8 @@ export function PreBlock({
       .some(
         (className) =>
           className === "language-mermaid" ||
-          className === "language-barkdown-html",
+          className === "language-barkdown-html" ||
+          className === "language-barkdown-text",
       )
   ) {
     return children;
@@ -37,6 +39,7 @@ export function CodeBlock({
   copy = true,
   documentPath,
   htmlEmbed,
+  textEmbed,
   inline,
   node: _node,
   ...props
@@ -44,6 +47,7 @@ export function CodeBlock({
   copy?: boolean;
   documentPath?: string;
   htmlEmbed?: HtmlEmbedResolver;
+  textEmbed?: TextEmbedResolver;
 }) {
   const { copied, copy: copyText } = useCopyToClipboard();
   const text = String(children ?? "").replace(/\n$/, "");
@@ -54,6 +58,9 @@ export function CodeBlock({
 
   if (language === "mermaid") {
     return <BarkdownMermaid diagram={text} />;
+  }
+  if (language === "barkdown-text") {
+    return <TextEmbed path={text.trim()} resolve={textEmbed} />;
   }
   if (language === "barkdown-html") {
     return (

@@ -38,6 +38,7 @@ import {
 } from "./renderers/collapsible-sections.js";
 import { headingComponents } from "./renderers/headings.js";
 import type { HtmlEmbedResolver } from "./renderers/html.js";
+import type { TextEmbedResolver } from "./renderers/text.js";
 import { BarkdownLink, type BarkdownLinkProps } from "./renderers/link.js";
 import {
   ImagePreview,
@@ -105,6 +106,8 @@ export type BarkdownMarkdownProps = {
   headingCopyPath?: string;
   /** Resolves companion HTML, from a dataset or an asynchronous host reader. */
   htmlEmbed?: HtmlEmbedResolver;
+  /** Resolves external text files relative to the current document. */
+  textEmbed?: TextEmbedResolver;
   linkIcons?: boolean;
   style?: CSSProperties;
 };
@@ -138,6 +141,7 @@ export function BarkdownMarkdown({
   copyCode = true,
   headingCopyPath,
   htmlEmbed,
+  textEmbed,
   linkIcons = true,
   style,
   value,
@@ -151,6 +155,7 @@ export function BarkdownMarkdown({
           copy={copyCode}
           documentPath={headingCopyPath}
           htmlEmbed={htmlEmbed}
+          textEmbed={textEmbed}
           {...props}
         />
       ),
@@ -181,6 +186,7 @@ export function BarkdownMarkdown({
     copyCode,
     headingCopyPath,
     htmlEmbed,
+    textEmbed,
     linkIcons,
   ]);
 

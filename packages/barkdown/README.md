@@ -69,6 +69,25 @@ link for a full-window preview. The full preview keeps the same isolation and
 does not grant access to the host page. Standalone HTML documents in the explorer
 remain script-blocked.
 
+## External text files in Markdown
+
+Use a `barkdown-text` fence with one document-relative file path:
+
+````markdown
+```barkdown-text
+notes/decision.md
+```
+````
+
+The explorer resolves the file from its loaded folder dataset. `.md` and
+`.markdown` files render as formatted Markdown. CSV files render as tables;
+the first row supplies the column headings, and quoted fields can contain
+commas, quotes, and newlines. TXT, JSON, and YAML files show escaped source
+text. Each view has a bounded, scrollable viewport. Empty files are valid.
+Hosts that use `BarkdownContent` directly must supply a stable `textEmbed`
+reader with the same return type and folder restrictions as `htmlEmbed`.
+Pending and rejected reads show a status message.
+
 ## Folder explorer
 
 ```tsx

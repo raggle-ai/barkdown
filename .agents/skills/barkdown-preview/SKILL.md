@@ -14,8 +14,8 @@ syntax, use [barkdown-html](../barkdown-html/SKILL.md),
 
 ## Choose the file or folder
 
-The folder reader loads `.md`, `.markdown`, `.html`, `.htm`, `.txt`, and
-`.text`. It does not load `.mdx`.
+The folder reader loads `.md`, `.markdown`, `.html`, `.htm`, `.txt`, `.text`,
+`.json`, `.yaml`, `.yml`, and `.csv`. It does not load `.mdx`.
 
 A file input serves that file's parent folder and selects the file. A folder
 input serves the folder and its supported descendants. Serve a common parent
