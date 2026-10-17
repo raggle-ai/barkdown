@@ -24,6 +24,8 @@ export function Preview({ value }: { value: string }) {
 
 Markdown rendering includes GitHub-flavored Markdown, sanitized inline HTML, syntax highlighting, KaTeX formulas, GitHub emoji shortcodes, and fenced Mermaid diagrams. The stylesheet contains their default visual treatment and the code-copy controls. You can override it with normal CSS by targeting `[data-barkdown]`, passing `className`/`style` to the component, or changing the `--barkdown-link-color`, `--barkdown-link-hover-color`, `--barkdown-focus-color`, and `--barkdown-muted-color` custom properties.
 
+Mermaid fences render in the browser with [Pele](https://pele.run). Pele loads when the first diagram mounts, escapes diagram text, ignores HTML labels and JavaScript `click` callbacks, and allows only relative, `http`, `https`, `mailto`, and `tel` links and relative, `http`, and `https` images. Invalid diagrams show the parser error as text; after an edit, the last valid diagram stays dimmed under the error. Diagrams fit the container width, and Pele adds zoom controls when a diagram must shrink to fit. The stylesheet maps Pele's `--pele-*` colors to the `[data-barkdown-mermaid]` custom properties, so diagrams follow the light or dark color scheme.
+
 Pass `collapsibleHeadings` to turn each heading into a section control. The section contains content until the next heading of the same or a higher level, child sections nest inside their parent, and every heading gets a stable ID. The control is a real button with `aria-expanded` and `aria-controls`, and sections are open by default. The option defaults to off, and headings render as plain, non-interactive text unless it is on.
 
 ```tsx
@@ -119,4 +121,4 @@ export default {
 };
 ```
 
-The renderer uses the official `mermaid` package and adds a scrollable canvas with zoom, fullscreen, source copy, and SVG download controls. Product sites should keep their visual treatment in CSS by overriding the `[data-barkdown-mermaid]` custom properties.
+The VitePress component uses Pele with the same security and theme behavior as the React renderer. It adds a scrollable canvas with zoom, fullscreen, source copy, and SVG download controls, and it turns off Pele's own zoom controls. The optional `config` prop sets default Mermaid settings for Pele; front matter and `%%{init}%%` directives in a diagram override them. The downloaded SVG uses Pele's default light colors. Product sites should keep their visual treatment in CSS by overriding the `[data-barkdown-mermaid]` custom properties.

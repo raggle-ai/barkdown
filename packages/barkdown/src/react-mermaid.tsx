@@ -1,23 +1,5 @@
-import { useEffect, useId, useState } from "react";
-
-import { defaultMermaidConfig, mermaidId } from "./mermaid.js";
-
-let renderQueue = Promise.resolve();
-
-async function renderMermaid(id: string, diagram: string) {
-  const pending = renderQueue.then(async () => {
-    const { default: mermaid } = await import("mermaid");
-    mermaid.initialize(defaultMermaidConfig);
-    return mermaid.render(id, diagram);
-  });
-
-  renderQueue = pending.then(
-    () => undefined,
-    () => undefined,
-  );
-
-  return pending;
-}
+import { useEffect, useRef, useState } from "react";
+import type { Mounted } from "pele";
 
 export type BarkdownMermaidProps = {
   diagram: string;
@@ -28,40 +10,48 @@ export function BarkdownMermaid({
   diagram,
   title = "Mermaid diagram",
 }: BarkdownMermaidProps) {
-  const reactId = useId().replaceAll(":", "");
-  const [svg, setSvg] = useState("");
+  const surface = useRef<HTMLDivElement>(null);
+  const mounted = useRef<Mounted>(undefined);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
+  const source = diagram.trim();
 
   useEffect(() => {
-    let cancelled = false;
+    if (mounted.current) {
+      mounted.current.update(source);
+      return;
+    }
 
-    async function renderDiagram() {
-      setSvg("");
-      setError("");
+    let active = true;
 
-      try {
-        const result = await renderMermaid(
-          mermaidId(diagram, `-${reactId}`),
-          diagram.trim(),
-        );
-
-        if (!cancelled) setSvg(result.svg);
-      } catch (caught) {
-        if (cancelled) return;
+    import("pele").then(
+      ({ mount }) => {
+        if (!active || !surface.current) return;
+        mounted.current = mount(surface.current, source);
+        setReady(true);
+      },
+      (caught: unknown) => {
+        if (!active) return;
         setError(
           caught instanceof Error
             ? caught.message
             : "Unable to render diagram.",
         );
-      }
-    }
-
-    void renderDiagram();
+      },
+    );
 
     return () => {
-      cancelled = true;
+      active = false;
     };
-  }, [diagram, reactId]);
+  }, [source]);
+
+  useEffect(
+    () => () => {
+      mounted.current?.destroy();
+      mounted.current = undefined;
+    },
+    [],
+  );
 
   return (
     <figure aria-label={title} data-barkdown-mermaid="">
@@ -71,14 +61,10 @@ export function BarkdownMermaid({
       <div data-barkdown-mermaid-viewport="">
         {error ? (
           <div data-barkdown-mermaid-error="">{error}</div>
-        ) : svg ? (
-          <div
-            data-barkdown-mermaid-surface=""
-            dangerouslySetInnerHTML={{ __html: svg }}
-          />
-        ) : (
+        ) : ready ? null : (
           <div data-barkdown-mermaid-status="">Rendering diagram…</div>
         )}
+        <div ref={surface} data-barkdown-mermaid-surface="" />
       </div>
     </figure>
   );

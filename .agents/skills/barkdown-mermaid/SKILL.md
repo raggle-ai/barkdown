@@ -32,14 +32,17 @@ Use a `text` fence when the source must remain visible rather than render.
 
 ## Preview limits
 
-- The React component loads Mermaid in the browser and shows a status while
-  rendering. Static server HTML alone does not contain the finished diagram.
-- The configuration uses strict security and disables HTML labels. Do not
-  depend on embedded HTML or click handlers.
-- Diagrams render as SVG with a title and viewport. The current React renderer
-  does not provide zoom, fullscreen, source-copy, or SVG-download controls.
-- Parse errors appear in the diagram area. Correct the source instead of
-  hiding the error.
+- The React component loads the Pele renderer in the browser and shows a
+  status until it is ready. Static server HTML alone does not contain the
+  finished diagram.
+- Pele escapes all diagram text and does not render HTML labels or JavaScript
+  `click` callbacks. Links can use only relative, `http`, `https`, `mailto`,
+  and `tel` URLs. Images can use only relative, `http`, and `https` URLs.
+- Diagrams render as SVG with a title and viewport. They fit the viewport
+  width. Pele adds zoom controls when a diagram must shrink to fit. The React
+  renderer does not provide fullscreen, source-copy, or SVG-download controls.
+- Parse errors appear as text in the diagram area. Correct the source instead
+  of hiding the error.
 - These instructions describe the standalone BarkDown preview, not the separate
   VitePress integration.
 - PlantUML fences do not have a dedicated renderer in the React Markdown path.
@@ -59,6 +62,5 @@ check the `mermaid` language label and remove any surrounding example fence.
 Check labels, arrows, and overflow.
 
 Use [barkdown-preview](../barkdown-preview/SKILL.md) to verify the preview URL.
-Implementation references:
-[react-mermaid.tsx](../../../packages/barkdown/src/react-mermaid.tsx) and
-[mermaid.ts](../../../packages/barkdown/src/mermaid.ts).
+Implementation reference:
+[react-mermaid.tsx](../../../packages/barkdown/src/react-mermaid.tsx).

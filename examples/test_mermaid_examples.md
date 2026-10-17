@@ -370,7 +370,7 @@ flowchart TD
 
 ## Notes
 
-- Mermaid diagrams are rendered client-side using the mermaid.js library
+- Mermaid diagrams are rendered client-side with the Pele renderer
 - Mermaid diagrams render directly in BarkDown without an external service
-- Some newer diagram types may require updated mermaid.js versions
+- Pele targets Mermaid 12.1.0 syntax with its own layout and visual style
 - Diagrams are responsive and render as SVG for crisp display at any size

@@ -1,16 +1,15 @@
+import type { Mounted, MountOptions, RenderOptions } from "pele";
 import {
   computed,
   defineComponent,
   h,
-  nextTick,
+  onBeforeUnmount,
   onMounted,
   ref,
   watch,
   type PropType,
   type VNode,
 } from "vue";
-
-import { defaultMermaidConfig, mermaidId } from "./mermaid.js";
 
 type MarkdownToken = {
   content: string;
@@ -41,6 +40,17 @@ export type BarkdownMermaidConfig = Record<string, unknown>;
 export type BarkdownMermaidOptions = {
   componentName?: string;
 };
+
+function fileName(value: string): string {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+
+  return `barkdown-mermaid-${Math.abs(hash)}.svg`;
+}
 
 function clamp(value: number): number {
   return Math.min(2.4, Math.max(0.6, value));
@@ -76,52 +86,27 @@ export const BarkdownMermaid = defineComponent({
     },
   },
   setup(props) {
-    const html = ref("");
+    const surface = ref<HTMLElement>();
     const error = ref("");
-    const loading = ref(false);
+    const loading = ref(true);
     const zoom = ref(1);
     const fullscreen = ref(false);
     const source = computed(() => props.diagram.trim());
-    const id = computed(() => mermaidId(source.value));
+    let mounted: Mounted | undefined;
+    let active = true;
 
-    async function render() {
-      if (!source.value) return;
-
-      loading.value = true;
-      error.value = "";
-      html.value = "";
-
-      await nextTick();
-
-      const { default: mermaid } = await import("mermaid");
-      mermaid.initialize({
-        ...defaultMermaidConfig,
-        ...(props.config ?? {}),
-      });
-
-      const rendered = await mermaid.render(id.value, source.value);
-      html.value = rendered.svg;
-      loading.value = false;
-    }
-
-    function rerender() {
-      render().catch((caught: unknown) => {
-        loading.value = false;
-        error.value =
-          caught instanceof Error
-            ? caught.message
-            : "Unable to render diagram.";
-      });
+    function options(): MountOptions {
+      return { config: props.config as RenderOptions["config"], zoom: false };
     }
 
     function download() {
-      if (!html.value) return;
+      if (!mounted?.result || mounted.error !== undefined) return;
 
-      const blob = new Blob([html.value], { type: "image/svg+xml" });
+      const blob = new Blob([mounted.result.svg], { type: "image/svg+xml" });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `${id.value}.svg`;
+      anchor.download = fileName(source.value);
       anchor.click();
       URL.revokeObjectURL(url);
     }
@@ -132,9 +117,31 @@ export const BarkdownMermaid = defineComponent({
       void navigator.clipboard.writeText(source.value);
     }
 
-    onMounted(rerender);
-    watch(() => props.diagram, rerender);
-    watch(() => props.config, rerender, { deep: true });
+    onMounted(() => {
+      import("pele").then(
+        ({ mount }) => {
+          if (!active || !surface.value) return;
+          mounted = mount(surface.value, source.value, options());
+          loading.value = false;
+        },
+        (caught: unknown) => {
+          loading.value = false;
+          error.value =
+            caught instanceof Error
+              ? caught.message
+              : "Unable to render diagram.";
+        },
+      );
+    });
+    onBeforeUnmount(() => {
+      active = false;
+      mounted?.destroy();
+    });
+    watch(
+      [source, () => props.config],
+      () => mounted?.update(source.value, options()),
+      { deep: true },
+    );
 
     return () =>
       h(
@@ -186,13 +193,11 @@ export const BarkdownMermaid = defineComponent({
             error.value
               ? h("div", { "data-barkdown-mermaid-error": "" }, error.value)
               : null,
-            !loading.value && !error.value
-              ? h("div", {
-                  "data-barkdown-mermaid-surface": "",
-                  style: { transform: `scale(${zoom.value})` },
-                  innerHTML: html.value,
-                })
-              : null,
+            h("div", {
+              ref: surface,
+              "data-barkdown-mermaid-surface": "",
+              style: { transform: `scale(${zoom.value})` },
+            }),
           ]),
         ],
       );
