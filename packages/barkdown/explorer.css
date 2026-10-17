@@ -597,19 +597,9 @@ button.root-path:hover {
   background: white;
 }
 
-.text-document {
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font:
-    0.94rem/1.7 ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Monaco,
-    Consolas,
-    "Liberation Mono",
-    monospace;
-  color: var(--ink);
+.document [data-barkdown-source-text] {
+  font-size: 0.94rem;
+  line-height: 1.7;
 }
 
 .document [data-barkdown] {

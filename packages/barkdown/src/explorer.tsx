@@ -4,7 +4,7 @@ import type {
   MouseEvent,
   ReactNode,
 } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -18,7 +18,9 @@ import {
 } from "lucide-react";
 import { parseDocument } from "yaml";
 
+import type { EmbedReader } from "./renderers/embed-file.js";
 import { LinkIcon } from "./renderers/link.js";
+import { TextContent } from "./renderers/text.js";
 import {
   documentKind,
   documentMatches,
@@ -88,7 +90,12 @@ export const resolveEmbeddedHtmlPath = (
   return new URL(htmlPath, baseUrl).pathname.slice(1);
 };
 
-export const resolveEmbeddedTextPath = resolveEmbeddedHtmlPath;
+/** Explorer page that shows a dataset path in a full window. */
+const documentPageUrl = (path: string) =>
+  documentUrl(window.location.href, path).href;
+
+const documentElement = () =>
+  window.document.querySelector<HTMLElement>("#document");
 
 function tree(documents: BarkdownDocument[]) {
   const root: FolderNode = { folders: new Map(), documents: [] };
@@ -132,6 +139,13 @@ export function BarkdownExplorer({
   const [query, setQuery] = useState("");
   const [sidebar, setSidebar] = useState(() => window.innerWidth > 760);
   const search = useRef<HTMLInputElement>(null);
+
+  // Embed Reload reads the folder again through the host source.
+  const refresh = useCallback(async () => {
+    const result = await source.read();
+    setData(result);
+    return result;
+  }, [source]);
 
   useEffect(() => {
     void source
@@ -200,47 +214,55 @@ export function BarkdownExplorer({
       }
     : undefined;
 
-  const open = (path: string) => {
+  const open = useCallback((path: string) => {
     const url = documentUrl(window.location.href, path);
     window.history.pushState(null, "", url);
     setSelected(path);
     setSidebar(false);
     window.scrollTo({ top: 0 });
     documentElement()?.focus({ preventScroll: true });
-  };
+  }, []);
 
-  const documentElement = () =>
-    window.document.querySelector<HTMLElement>("#document");
+  // The link component must keep one identity across renders. A new component
+  // type remounts every rendered element, which would reset embed state and
+  // restart embedded pages on each search keystroke or dataset refresh.
+  const latest = useRef({ data, document });
+  useEffect(() => {
+    latest.current = { data, document };
+  });
+  const relativeLink = useCallback(
+    ({
+      href,
+      onClick,
+      children,
+      ...props
+    }: AnchorHTMLAttributes<HTMLAnchorElement>) => {
+      const handle = (event: MouseEvent<HTMLAnchorElement>) => {
+        onClick?.(event);
+        const { data, document } = latest.current;
+        if (event.defaultPrevented || !href || !document) return;
+        if (/^[a-z]+:/i.test(href) || href.startsWith("#")) return;
+        const clean = href.split("#")[0]?.split("?")[0];
+        if (!clean || !documentKind(clean)) return;
+        const base = document.path.split("/").slice(0, -1).join("/");
+        const resolved = new URL(
+          clean,
+          `https://kennel.local/${base}/`,
+        ).pathname.slice(1);
+        if (!data?.documents.some((item) => item.path === resolved)) return;
+        event.preventDefault();
+        open(resolved);
+      };
 
-  const relativeLink = ({
-    href,
-    onClick,
-    children,
-    ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement>) => {
-    const handle = (event: MouseEvent<HTMLAnchorElement>) => {
-      onClick?.(event);
-      if (event.defaultPrevented || !href || !document) return;
-      if (/^[a-z]+:/i.test(href) || href.startsWith("#")) return;
-      const clean = href.split("#")[0]?.split("?")[0];
-      if (!clean || !documentKind(clean)) return;
-      const base = document.path.split("/").slice(0, -1).join("/");
-      const resolved = new URL(
-        clean,
-        `https://kennel.local/${base}/`,
-      ).pathname.slice(1);
-      if (!data?.documents.some((item) => item.path === resolved)) return;
-      event.preventDefault();
-      open(resolved);
-    };
-
-    return (
-      <a {...props} href={href} onClick={handle}>
-        {showLinkIcons && href ? <LinkIcon href={href} /> : null}
-        {children}
-      </a>
-    );
-  };
+      return (
+        <a {...props} href={href} onClick={handle}>
+          {showLinkIcons && href ? <LinkIcon href={href} /> : null}
+          {children}
+        </a>
+      );
+    },
+    [open, showLinkIcons],
+  );
 
   return (
     <main
@@ -403,8 +425,10 @@ export function BarkdownExplorer({
             >
               <DocumentContent
                 document={document}
-                documents={data?.documents}
+                documents={data?.documents ?? []}
+                refresh={refresh}
                 root={data?.root}
+                pageUrl={documentPageUrl}
                 linkComponent={relativeLink}
               />
             </article>
@@ -570,6 +594,13 @@ export function BarkdownDocument({
   const [data, setData] = useState<BarkdownDataset>();
   const [error, setError] = useState("");
 
+  const refresh = useCallback(async () => {
+    const result = await source.read();
+    setData(result);
+    setError("");
+    return result;
+  }, [source]);
+
   useEffect(() => {
     let active = true;
     void source
@@ -609,6 +640,7 @@ export function BarkdownDocument({
       <DocumentContent
         document={document}
         documents={data.documents}
+        refresh={refresh}
         root={data.root}
       />
     </div>
@@ -617,16 +649,22 @@ export function BarkdownDocument({
 
 type DocumentContentProps = {
   document: BarkdownDocument;
-  documents?: BarkdownDocument[];
+  documents: BarkdownDocument[];
+  /** Reads the folder again. Embed Reload uses it for current companion content. */
+  refresh: () => Promise<BarkdownDataset>;
   /** Absolute folder root on the local machine; enables heading copy links. */
   root?: string;
+  /** Page URL for a dataset path, when the host has document navigation. */
+  pageUrl?: (path: string) => string;
   linkComponent?: ComponentType<AnchorHTMLAttributes<HTMLAnchorElement>>;
 };
 
 function DocumentContent({
   document,
   documents,
+  refresh,
   root,
+  pageUrl,
   linkComponent,
 }: DocumentContentProps) {
   const content =
@@ -636,6 +674,33 @@ function DocumentContent({
   const headingCopyPath = root
     ? `${root.replace(/[\\/]+$/, "")}/${document.path}`
     : undefined;
+
+  // The reader keeps one identity per document so embeds do not remount when
+  // the dataset refreshes. First reads use the loaded dataset; Reload reads
+  // the folder again through the host source.
+  const latest = useRef(documents);
+  useEffect(() => {
+    latest.current = documents;
+  });
+  const embed = useCallback<EmbedReader>(
+    (path, { reload }) => {
+      const resolved = resolveEmbeddedHtmlPath(document.path, path);
+      const find = (items: BarkdownDocument[]) =>
+        items.find((item) => item.path === resolved)?.content;
+      return reload
+        ? refresh().then((result) => find(result.documents))
+        : find(latest.current);
+    },
+    [document.path, refresh],
+  );
+  const embedUrl = useCallback(
+    (path: string) => pageUrl?.(resolveEmbeddedHtmlPath(document.path, path)),
+    [document.path, pageUrl],
+  );
+  const components = useMemo(
+    () => (linkComponent ? { a: linkComponent } : undefined),
+    [linkComponent],
+  );
 
   return (
     <article
@@ -657,22 +722,13 @@ function DocumentContent({
           mode="markdown"
           value={content.body}
           headingCopyPath={headingCopyPath}
-          components={linkComponent ? { a: linkComponent } : undefined}
-          htmlEmbed={(path) => {
-            const resolved = resolveEmbeddedHtmlPath(document.path, path);
-            return documents?.find(
-              (item) => item.kind === "html" && item.path === resolved,
-            )?.content;
-          }}
-          textEmbed={(path) => {
-            const resolved = resolveEmbeddedTextPath(document.path, path);
-            return documents?.find(
-              (item) => item.path === resolved && item.kind !== "html",
-            )?.content;
-          }}
+          components={components}
+          htmlEmbed={embed}
+          textEmbed={embed}
+          embedUrl={embedUrl}
         />
       ) : (
-        <pre className="text-document">{document.content}</pre>
+        <TextContent path={document.path} value={document.content} />
       )}
     </article>
   );
