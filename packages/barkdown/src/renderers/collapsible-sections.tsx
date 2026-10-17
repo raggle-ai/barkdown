@@ -13,8 +13,8 @@ import {
   HeadingCopyAnchor,
   headingReference,
   headingTitle as extractHeadingTitle,
-} from "./react-heading-copy.js";
-import { useCopyToClipboard } from "./use-copy-to-clipboard.js";
+} from "./headings.js";
+import { useCopyToClipboard } from "../use-copy-to-clipboard.js";
 
 export type CollapsibleSectionProps = {
   children?: ReactNode;

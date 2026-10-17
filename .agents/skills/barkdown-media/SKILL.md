@@ -165,6 +165,6 @@ instead of a row, remove the `html` fence around the tags.
 
 Use [barkdown-preview](../barkdown-preview/SKILL.md) to verify the preview URL.
 Implementation references:
-[react-media.tsx](../../../packages/barkdown/src/react-media.tsx) and the
+[media.tsx](../../../packages/barkdown/src/renderers/media.tsx) and the
 sanitizer in [react.tsx](../../../packages/barkdown/src/react.tsx).
 See [test_media.md](../../../examples/test_media.md) for existing media sources.

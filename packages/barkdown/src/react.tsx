@@ -1,17 +1,11 @@
 import { evaluate } from "@mdx-js/mdx";
-import { Check, ChevronDown, Copy, Hash, Link2, RotateCw } from "lucide-react";
 import {
-  Children,
   type ComponentProps,
   type ComponentType,
   type CSSProperties,
-  cloneElement,
-  isValidElement,
-  type JSX,
   type ReactNode,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import ReactMarkdown, {
@@ -26,25 +20,32 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import * as runtime from "react/jsx-runtime";
 
+import { joinClassNames } from "./class-names.js";
 import { remarkGithubEmojiImages } from "./emoji.js";
-import { BarkdownLink } from "./link.js";
 import {
   COLLAPSIBLE_SECTION_TAG,
   rehypeCollapsibleHeadings,
 } from "./rehype-collapsible-headings.js";
+import { rehypeHeadingLines } from "./rehype-heading-lines.js";
+import {
+  type BarkdownCodeProps,
+  CodeBlock,
+  PreBlock,
+} from "./renderers/code.js";
 import {
   CollapsibleSection,
   type CollapsibleSectionProps,
-} from "./react-collapsible-sections.js";
-import { rehypeHeadingLines } from "./rehype-heading-lines.js";
+} from "./renderers/collapsible-sections.js";
+import { headingComponents } from "./renderers/headings.js";
+import type { HtmlEmbedResolver } from "./renderers/html.js";
+import { BarkdownLink, type BarkdownLinkProps } from "./renderers/link.js";
 import {
-  HeadingCopyAnchor,
-  headingReference,
-  headingTitle as extractHeadingTitle,
-} from "./react-heading-copy.js";
-import { BarkdownMermaid } from "./react-mermaid.js";
-import { ImagePreview, IframePreview, VideoPreview } from "./react-media.js";
-import { useCopyToClipboard } from "./use-copy-to-clipboard.js";
+  ImagePreview,
+  IframePreview,
+  VideoPreview,
+} from "./renderers/media.js";
+
+export { CodeBlock, type BarkdownCodeProps } from "./renderers/code.js";
 
 const markdownSchema = {
   ...defaultSchema,
@@ -86,22 +87,7 @@ const sanitizeMarkdown: [typeof rehypeSanitize, typeof markdownSchema] = [
   markdownSchema,
 ];
 
-function joinClassNames(
-  ...values: Array<string | undefined>
-): string | undefined {
-  const className = values.filter(Boolean).join(" ");
-  return className || undefined;
-}
-
 export type BarkdownMode = "markdown" | "mdx";
-
-export type BarkdownCodeProps = ComponentProps<"code"> & {
-  inline?: boolean;
-  node?: unknown;
-};
-
-type BarkdownElementProps<T extends keyof JSX.IntrinsicElements> =
-  ComponentProps<T> & { node?: unknown };
 
 export type BarkdownMarkdownComponents = Record<string, ComponentType<any>>;
 
@@ -118,9 +104,7 @@ export type BarkdownMarkdownProps = {
    */
   headingCopyPath?: string;
   /** Resolves companion HTML, from a dataset or an asynchronous host reader. */
-  htmlEmbed?: (
-    path: string,
-  ) => string | undefined | Promise<string | undefined>;
+  htmlEmbed?: HtmlEmbedResolver;
   linkIcons?: boolean;
   style?: CSSProperties;
 };
@@ -160,7 +144,7 @@ export function BarkdownMarkdown({
 }: BarkdownMarkdownProps) {
   const mergedComponents = useMemo<MarkdownComponents>(() => {
     const merged = {
-      a: ({ node: _node, ...props }: BarkdownElementProps<"a">) =>
+      a: ({ node: _node, ...props }: BarkdownLinkProps) =>
         linkIcons ? <BarkdownLink {...props} /> : <a {...props} />,
       code: (props: BarkdownCodeProps) => (
         <CodeBlock
@@ -241,88 +225,6 @@ export function BarkdownMarkdown({
       </ReactMarkdown>
     </div>
   );
-}
-
-const HEADING_LEVELS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
-
-function headingComponents(path: string): Record<string, ComponentType<any>> {
-  return Object.fromEntries(
-    HEADING_LEVELS.map((tag) => [
-      tag,
-      (props: BarkdownElementProps<(typeof HEADING_LEVELS)[number]>) => (
-        <HeadingWithCopy path={path} tag={tag} {...props} />
-      ),
-    ]),
-  );
-}
-
-function HeadingWithCopy({
-  path,
-  tag,
-  children,
-  node: _node,
-  ...props
-}: {
-  path: string;
-  tag: (typeof HEADING_LEVELS)[number];
-} & BarkdownElementProps<(typeof HEADING_LEVELS)[number]>) {
-  const { copied, copy } = useCopyToClipboard();
-  const Tag = tag;
-  const attributes = props as Record<string, unknown>;
-  const line =
-    typeof attributes["data-barkdown-line"] === "string"
-      ? attributes["data-barkdown-line"]
-      : undefined;
-  const className = joinClassNames(
-    "barkdown-heading-wrapper",
-    typeof props.className === "string" ? props.className : undefined,
-  );
-
-  const title = extractHeadingTitle(children);
-  const copyable = Boolean(path && line);
-  const target = copyable ? headingReference(path, line, title) : undefined;
-
-  return (
-    <Tag
-      {...props}
-      className={joinClassNames(
-        className,
-        copyable ? "barkdown-heading-copyable" : undefined,
-      )}
-      onClick={copyable ? () => copy(target!) : undefined}
-    >
-      {children}
-      {target ? (
-        <HeadingCopyAnchor
-          copied={copied}
-          inline
-          onCopy={() => copy(target)}
-          target={target}
-        />
-      ) : null}
-    </Tag>
-  );
-}
-
-function PreBlock({
-  children,
-  node: _node,
-  ...props
-}: BarkdownElementProps<"pre">) {
-  if (
-    isValidElement<{ className?: string }>(children) &&
-    children.props.className
-      ?.split(/\s+/)
-      .some(
-        (className) =>
-          className === "language-mermaid" ||
-          className === "language-barkdown-html",
-      )
-  ) {
-    return children;
-  }
-
-  return <pre {...props}>{children}</pre>;
 }
 
 export function BarkdownMdx({
@@ -418,233 +320,5 @@ export function BarkdownMdx({
     >
       <Content components={mergedComponents} />
     </div>
-  );
-}
-
-function HtmlEmbed({
-  path,
-  documentPath,
-  resolve,
-}: {
-  path: string;
-  documentPath?: string;
-  resolve: BarkdownMarkdownProps["htmlEmbed"];
-}) {
-  const [revision, setRevision] = useState(0);
-  const source = useMemo(
-    () => (path && !path.includes("\n") ? resolve?.(path) : undefined),
-    [path, resolve, revision],
-  );
-  const pending = typeof source === "string" ? undefined : source;
-  const [result, setResult] = useState<{
-    pending: Promise<string | undefined>;
-    source?: string;
-    failed?: boolean;
-  }>();
-  useEffect(() => {
-    if (!pending) return;
-    let active = true;
-    void pending.then(
-      (source) => {
-        if (active) setResult({ pending, source });
-      },
-      () => {
-        if (active) setResult({ pending, failed: true });
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [pending]);
-
-  const loading = Boolean(pending && result?.pending !== pending);
-  const loaded = pending && result?.pending === pending ? result : undefined;
-  const html = typeof source === "string" ? source : loaded?.source;
-  const filename = path.split("/").at(-1) ?? path;
-  const title = filename.replace(/\.html?$/i, "").replaceAll(/[-_]/g, " ");
-  const filePath = documentPath
-    ? `${documentPath.slice(0, documentPath.lastIndexOf("/") + 1)}${path}`
-    : path;
-  return (
-    <HtmlPreview
-      html={html}
-      path={filePath}
-      title={title}
-      loading={loading}
-      onReload={() => setRevision((value) => value + 1)}
-    >
-      {loading ? (
-        <span role="status">Loading HTML visualization…</span>
-      ) : html ? (
-        <iframe
-          key={revision}
-          data-barkdown-html-embed=""
-          loading="lazy"
-          sandbox="allow-scripts"
-          srcDoc={html}
-          title={title}
-        />
-      ) : (
-        <span data-barkdown-html-embed-error="">
-          {loaded?.failed
-            ? "Could not load HTML visualization"
-            : "HTML visualization not found"}
-          : {path || "missing path"}
-        </span>
-      )}
-    </HtmlPreview>
-  );
-}
-
-function HtmlPreview({
-  children,
-  html,
-  loading,
-  onReload,
-  path,
-  title,
-}: {
-  children: ReactNode;
-  html?: string;
-  loading: boolean;
-  onReload: () => void;
-  path: string;
-  title: string;
-}) {
-  const { copied, copy } = useCopyToClipboard();
-  const [link, setLink] = useState<{ html: string; href: string }>();
-  useEffect(() => {
-    if (!html) return;
-    // Keep the new tab sandboxed too: a raw HTML blob would inherit host access.
-    const page = document.implementation.createHTMLDocument(title);
-    const charset = page.createElement("meta");
-    charset.setAttribute("charset", "utf-8");
-    page.head.prepend(charset);
-    page.documentElement.style.height = "100%";
-    page.body.style.cssText = "margin:0;height:100%";
-    const frame = page.createElement("iframe");
-    frame.setAttribute("sandbox", "allow-scripts");
-    frame.title = title;
-    frame.srcdoc = html;
-    frame.style.cssText = "display:block;width:100%;height:100%;border:0";
-    page.body.append(frame);
-    const href = URL.createObjectURL(
-      new Blob(["<!doctype html>", page.documentElement.outerHTML], {
-        type: "text/html;charset=utf-8",
-      }),
-    );
-    setLink({ html, href });
-    return () => URL.revokeObjectURL(href);
-  }, [html, title]);
-
-  return (
-    <figure data-barkdown-html-preview="" aria-label={title}>
-      <figcaption data-barkdown-html-toolbar="">
-        <span>{title}</span>
-        <span data-barkdown-html-actions="">
-          <button
-            type="button"
-            aria-label="Reload HTML"
-            title="Reload HTML"
-            disabled={loading}
-            onClick={onReload}
-          >
-            <RotateCw aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-label={
-              copied ? "HTML file path copied" : "Copy HTML file path"
-            }
-            title={`Copy HTML file path: ${path}`}
-            onClick={() => copy(path)}
-          >
-            {copied ? (
-              <Check aria-hidden="true" />
-            ) : (
-              <Copy aria-hidden="true" />
-            )}
-          </button>
-          <a
-            data-barkdown-html-open=""
-            aria-label="Open HTML"
-            title="Open HTML"
-            href={html && link?.html === html ? link.href : undefined}
-            aria-disabled={!html || undefined}
-            rel="noopener noreferrer"
-          >
-            <Link2 aria-hidden="true" />
-          </a>
-        </span>
-      </figcaption>
-      {children}
-    </figure>
-  );
-}
-
-export function CodeBlock({
-  children,
-  className,
-  copy = true,
-  documentPath,
-  htmlEmbed,
-  inline,
-  node: _node,
-  ...props
-}: BarkdownCodeProps & {
-  copy?: boolean;
-  documentPath?: string;
-  htmlEmbed?: BarkdownMarkdownProps["htmlEmbed"];
-}) {
-  const { copied, copy: copyText } = useCopyToClipboard();
-  const text = String(children ?? "").replace(/\n$/, "");
-  const language = /(?:^|\s)language-([\w+-]+)/
-    .exec(className ?? "")?.[1]
-    ?.toLowerCase();
-  const block = inline === false || Boolean(className) || text.includes("\n");
-
-  if (language === "mermaid") {
-    return <BarkdownMermaid diagram={text} />;
-  }
-  if (language === "barkdown-html") {
-    return (
-      <HtmlEmbed
-        path={text.trim()}
-        documentPath={documentPath}
-        resolve={htmlEmbed}
-      />
-    );
-  }
-
-  if (!block) {
-    return (
-      <code className={className} {...props}>
-        {children}
-      </code>
-    );
-  }
-
-  return (
-    <span data-barkdown-code-block="">
-      <code className={className} {...props}>
-        {children}
-      </code>
-      {copy ? (
-        <button
-          aria-label="Copy code"
-          data-barkdown-code-copy=""
-          type="button"
-          onClick={() => {
-            copyText(text);
-          }}
-        >
-          {copied ? (
-            <Check aria-hidden="true" size={14} />
-          ) : (
-            <Copy aria-hidden="true" size={14} />
-          )}
-        </button>
-      ) : null}
-    </span>
   );
 }

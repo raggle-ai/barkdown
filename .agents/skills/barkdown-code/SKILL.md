@@ -59,4 +59,4 @@ text, whitespace, and horizontal overflow.
 
 Use [barkdown-preview](../barkdown-preview/SKILL.md) to verify the preview URL.
 Implementation reference: `CodeBlock` and `PreBlock` in
-[react.tsx](../../../packages/barkdown/src/react.tsx).
+[code.tsx](../../../packages/barkdown/src/renderers/code.tsx).

@@ -1,7 +1,13 @@
 import { Hash, Check } from "lucide-react";
-import { isValidElement, type ReactNode } from "react";
+import {
+  type ComponentProps,
+  type ComponentType,
+  isValidElement,
+  type ReactNode,
+} from "react";
 
-import { useCopyToClipboard } from "./use-copy-to-clipboard.js";
+import { joinClassNames } from "../class-names.js";
+import { useCopyToClipboard } from "../use-copy-to-clipboard.js";
 
 /**
  * Hashtag button for a heading hover. Copy target is a VS Code-style
@@ -69,4 +75,71 @@ export function headingTitle(children: ReactNode): string | undefined {
   visit(children);
   const joined = parts.join("").replace(/\s+/g, " ").trim();
   return joined || undefined;
+}
+
+const HEADING_LEVELS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
+
+type HeadingProps = ComponentProps<(typeof HEADING_LEVELS)[number]> & {
+  node?: unknown;
+};
+
+export function headingComponents(
+  path: string,
+): Record<string, ComponentType<any>> {
+  return Object.fromEntries(
+    HEADING_LEVELS.map((tag) => [
+      tag,
+      (props: HeadingProps) => (
+        <HeadingWithCopy path={path} tag={tag} {...props} />
+      ),
+    ]),
+  );
+}
+
+function HeadingWithCopy({
+  path,
+  tag,
+  children,
+  node: _node,
+  ...props
+}: {
+  path: string;
+  tag: (typeof HEADING_LEVELS)[number];
+} & HeadingProps) {
+  const { copied, copy } = useCopyToClipboard();
+  const Tag = tag;
+  const attributes = props as Record<string, unknown>;
+  const line =
+    typeof attributes["data-barkdown-line"] === "string"
+      ? attributes["data-barkdown-line"]
+      : undefined;
+  const className = joinClassNames(
+    "barkdown-heading-wrapper",
+    typeof props.className === "string" ? props.className : undefined,
+  );
+
+  const title = headingTitle(children);
+  const copyable = Boolean(path && line);
+  const target = copyable ? headingReference(path, line, title) : undefined;
+
+  return (
+    <Tag
+      {...props}
+      className={joinClassNames(
+        className,
+        copyable ? "barkdown-heading-copyable" : undefined,
+      )}
+      onClick={copyable ? () => copy(target!) : undefined}
+    >
+      {children}
+      {target ? (
+        <HeadingCopyAnchor
+          copied={copied}
+          inline
+          onCopy={() => copy(target)}
+          target={target}
+        />
+      ) : null}
+    </Tag>
+  );
 }

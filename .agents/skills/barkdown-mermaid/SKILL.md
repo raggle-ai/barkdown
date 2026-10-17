@@ -60,5 +60,5 @@ Check labels, arrows, and overflow.
 
 Use [barkdown-preview](../barkdown-preview/SKILL.md) to verify the preview URL.
 Implementation references:
-[react-mermaid.tsx](../../../packages/barkdown/src/react-mermaid.tsx) and
+[mermaid.tsx](../../../packages/barkdown/src/renderers/mermaid.tsx) and
 [mermaid.ts](../../../packages/barkdown/src/mermaid.ts).
