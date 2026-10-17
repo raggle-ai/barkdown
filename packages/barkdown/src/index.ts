@@ -22,6 +22,7 @@ export {
   BarkdownMermaid,
   type BarkdownMermaidProps,
 } from "./renderers/mermaid.js";
+export type { EmbedReader } from "./renderers/embed-file.js";
 export {
   ImagePreview,
   IframePreview,

@@ -2,9 +2,10 @@ import { Check, Copy } from "lucide-react";
 import { type ComponentProps, isValidElement } from "react";
 
 import { useCopyToClipboard } from "../use-copy-to-clipboard.js";
-import { HtmlEmbed, type HtmlEmbedResolver } from "./html.js";
+import type { EmbedReader } from "./embed-file.js";
+import { HtmlEmbed } from "./html.js";
 import { BarkdownMermaid } from "./mermaid.js";
-import { TextEmbed, type TextEmbedResolver } from "./text.js";
+import { TextEmbed } from "./text.js";
 
 export type BarkdownCodeProps = ComponentProps<"code"> & {
   inline?: boolean;
@@ -40,14 +41,16 @@ export function CodeBlock({
   documentPath,
   htmlEmbed,
   textEmbed,
+  embedUrl,
   inline,
   node: _node,
   ...props
 }: BarkdownCodeProps & {
   copy?: boolean;
   documentPath?: string;
-  htmlEmbed?: HtmlEmbedResolver;
-  textEmbed?: TextEmbedResolver;
+  htmlEmbed?: EmbedReader;
+  textEmbed?: EmbedReader;
+  embedUrl?: (path: string) => string | undefined;
 }) {
   const { copied, copy: copyText } = useCopyToClipboard();
   const text = String(children ?? "").replace(/\n$/, "");
@@ -60,14 +63,22 @@ export function CodeBlock({
     return <BarkdownMermaid diagram={text} />;
   }
   if (language === "barkdown-text") {
-    return <TextEmbed path={text.trim()} resolve={textEmbed} />;
+    const path = text.trim();
+    return (
+      <TextEmbed
+        path={path}
+        documentPath={documentPath}
+        reader={textEmbed}
+        url={embedUrl?.(path)}
+      />
+    );
   }
   if (language === "barkdown-html") {
     return (
       <HtmlEmbed
         path={text.trim()}
         documentPath={documentPath}
-        resolve={htmlEmbed}
+        reader={htmlEmbed}
       />
     );
   }
