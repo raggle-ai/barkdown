@@ -28,6 +28,7 @@ export function BarkdownMermaid({
       ({ mount }) => {
         if (!active || !surface.current) return;
         mounted.current = mount(surface.current, source);
+        setError("");
         setReady(true);
       },
       (caught: unknown) => {

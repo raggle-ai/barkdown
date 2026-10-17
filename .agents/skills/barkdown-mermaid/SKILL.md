@@ -41,6 +41,8 @@ Use a `text` fence when the source must remain visible rather than render.
 - Diagrams render as SVG with a title and viewport. They fit the viewport
   width. Pele adds zoom controls when a diagram must shrink to fit. The React
   renderer does not provide fullscreen, source-copy, or SVG-download controls.
+- A `style` or `classDef` fill without `color` gets a dark label in light and
+  dark mode. Add `color` when the fill is dark.
 - Parse errors appear as text in the diagram area. Correct the source instead
   of hiding the error.
 - These instructions describe the standalone BarkDown preview, not the separate

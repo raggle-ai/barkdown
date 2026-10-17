@@ -23,7 +23,7 @@ const bundle = await build({
       export { createElement } from "react";
       export { createRoot } from "react-dom/client";
       export { BarkdownMarkdown } from "./dist/index.js";
-      export { createApp, h, ref } from "vue";
+      export { createApp, h, reactive, ref } from "vue";
       export { BarkdownMermaid } from "./dist/vitepress.js";
     `,
     resolveDir: packageRoot,
@@ -112,18 +112,14 @@ function fence(source) {
   return ["```mermaid", source, "```"].join("\n");
 }
 
-// Accepts rgb() and color(srgb ...) values.
+// Takes [red, green, blue] in the 0-255 range.
 function luminance(color) {
-  const scale = color.startsWith("color(") ? 1 : 255;
-  const channels = color
-    .match(/[\d.]+/g)
-    .slice(0, 3)
-    .map((value) => {
-      const channel = Number(value) / scale;
-      return channel <= 0.04045
-        ? channel / 12.92
-        : ((channel + 0.055) / 1.055) ** 2.4;
-    });
+  const channels = color.slice(0, 3).map((value) => {
+    const channel = value / 255;
+    return channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4;
+  });
   return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
 }
 
@@ -199,26 +195,89 @@ test("Pele renders Mermaid fences in React and VitePress components", async (t) 
       [root, count],
     );
   const svgs = tab.locator("#react [data-barkdown-mermaid-surface] > svg.pele");
-  // Resolves `fill` values such as color-mix(currentcolor ...) to rgb().
-  const themeColors = () =>
-    svgs.first().evaluate((svg) => {
-      const resolve = (element, value) => {
-        const probe = document.createElementNS(svg.namespaceURI, "g");
-        element.after(probe);
-        probe.style.color = value;
-        const color = getComputedStyle(probe).color;
-        probe.remove();
-        return color;
+  // Scans every SVG label against the filled shapes drawn under its centre,
+  // composited over the figure background.
+  const labelColors = () =>
+    tab.evaluate(() => {
+      const probe = document.createElement("span");
+      document.body.append(probe);
+      const rgba = (element, value) => {
+        const color = getComputedStyle(element).color;
+        probe.style.color = value.replace(/currentcolor/gi, color);
+        const resolved = getComputedStyle(probe).color;
+        const [red, green, blue, alpha = 1] = resolved
+          .match(/[\d.]+(?:e-?\d+)?/g)
+          .map(Number);
+        const scale = resolved.startsWith("color(") ? 255 : 1;
+        return [red * scale, green * scale, blue * scale, alpha];
       };
-      const node = svg.querySelector(".pele-node rect, .pele-node polygon");
-      const label = svg.querySelector(".pele-node text");
-      const figure = svg.closest("[data-barkdown-mermaid]");
-      return {
-        background: getComputedStyle(figure).backgroundColor,
-        label: resolve(label, getComputedStyle(label).fill),
-        node: resolve(node, getComputedStyle(node).fill),
-      };
+      const over = (top, bottom) =>
+        [0, 1, 2].map((i) => top[i] * top[3] + bottom[i] * (1 - top[3]));
+      const figures = [
+        ...document.querySelectorAll("#react [data-barkdown-mermaid]"),
+      ];
+      const background = (figure) =>
+        over(
+          rgba(figure, getComputedStyle(figure).backgroundColor),
+          [255, 255, 255],
+        );
+      const labels = figures.flatMap((figure) => {
+        const shapes = [
+          ...figure.querySelectorAll(
+            "svg.pele :is(rect, path, polygon, circle, ellipse)",
+          ),
+        ];
+        return [...figure.querySelectorAll("svg.pele text")].flatMap((text) => {
+          const box = text.getBoundingClientRect();
+          if (!text.textContent.trim() || !box.width) return [];
+          const x = box.left + box.width / 2;
+          const y = box.top + box.height / 2;
+          let back = background(figure);
+          for (const shape of shapes) {
+            const style = getComputedStyle(shape);
+            const area = shape.getBoundingClientRect();
+            if (
+              shape.compareDocumentPosition(text) &
+                Node.DOCUMENT_POSITION_PRECEDING ||
+              style.fill === "none" ||
+              area.left > x ||
+              area.right < x ||
+              area.top > y ||
+              area.bottom < y ||
+              area.width >= box.width * 40
+            ) {
+              continue;
+            }
+            const fill = rgba(shape, style.fill);
+            fill[3] *= Number(style.fillOpacity) * Number(style.opacity);
+            back = over(fill, back);
+          }
+          const front = rgba(text, getComputedStyle(text).fill);
+          return [
+            {
+              back,
+              front: over(front, back),
+              text: text.textContent.trim(),
+            },
+          ];
+        });
+      });
+      const page = background(figures[0]);
+      probe.remove();
+      return { background: page, labels };
     });
+  const checkContrast = async (scheme) => {
+    const { background, labels } = await labelColors();
+    assert.ok(labels.length > 250, `${scheme}: ${labels.length} labels`);
+    assert.deepEqual(
+      labels
+        .filter((label) => contrast(label.front, label.back) < 4.5)
+        .map((label) => label.text),
+      [],
+      `${scheme}: labels below 4.5:1`,
+    );
+    return luminance(background);
+  };
   // Pele shows a short error over an earlier diagram and keeps the full
   // message in the title attribute.
   const errorText = async (error) =>
@@ -281,9 +340,7 @@ test("Pele renders Mermaid fences in React and VitePress components", async (t) 
     }
     await capture("react-examples-light");
 
-    const light = await themeColors();
-    assert.ok(contrast(light.label, light.node) >= 4.5, JSON.stringify(light));
-    assert.ok(luminance(light.background) > 0.8, light.background);
+    assert.ok((await checkContrast("light")) > 0.8);
 
     for (const [name, apply, reset] of [
       [
@@ -311,9 +368,7 @@ test("Pele renders Mermaid fences in React and VitePress components", async (t) 
       ],
     ]) {
       await apply();
-      const dark = await themeColors();
-      assert.ok(contrast(dark.label, dark.node) >= 4.5, JSON.stringify(dark));
-      assert.ok(luminance(dark.background) < 0.1, `${name} ${dark.background}`);
+      assert.ok((await checkContrast(name)) < 0.1, name);
       await capture(`react-examples-${name}`);
       await reset();
     }
@@ -423,11 +478,14 @@ test("Pele renders Mermaid fences in React and VitePress components", async (t) 
   await t.test("VitePress component keeps its controls", async () => {
     await tab.evaluate(
       ([source, repeated]) => {
-        const { BarkdownMermaid, createApp, h, ref } = window.barkdown;
+        const { BarkdownMermaid, createApp, h, reactive, ref } =
+          window.barkdown;
         window.vueDiagram = ref(source);
+        window.vueConfig = reactive({ flowchart: { rankSpacing: 40 } });
         createApp({
           render: () => [
             h(BarkdownMermaid, {
+              config: window.vueConfig,
               diagram: window.vueDiagram.value,
               title: "VitePress diagram",
             }),
@@ -449,6 +507,23 @@ test("Pele renders Mermaid fences in React and VitePress components", async (t) 
     const surface = figure.locator("[data-barkdown-mermaid-surface]");
     const button = (label) => figure.getByRole("button", { name: label });
     assert.equal(await figure.getAttribute("aria-label"), "VitePress diagram");
+
+    const viewBox = () => surface.locator("svg.pele").getAttribute("viewBox");
+    const narrow = await viewBox();
+    await tab.evaluate(() => {
+      window.vueConfig.flowchart = { rankSpacing: 90 };
+    });
+    await tab.waitForFunction(
+      (before) =>
+        document
+          .querySelector("#vue [data-barkdown-mermaid-surface] > svg.pele")
+          ?.getAttribute("viewBox") !== before,
+      narrow,
+    );
+    assert.ok(
+      Number((await viewBox()).split(" ")[2]) > Number(narrow.split(" ")[2]),
+      "a deep config change redraws the diagram",
+    );
     assert.equal(
       await figure
         .locator(".pele-zoom, button:not([data-barkdown-mermaid-action])")

@@ -95,8 +95,10 @@ export const BarkdownMermaid = defineComponent({
     let mounted: Mounted | undefined;
     let active = true;
 
+    // A new config object makes Pele parse again after a deep config change.
     function options(): MountOptions {
-      return { config: props.config as RenderOptions["config"], zoom: false };
+      const config = props.config && { ...props.config };
+      return { config: config as RenderOptions["config"], zoom: false };
     }
 
     function download() {
