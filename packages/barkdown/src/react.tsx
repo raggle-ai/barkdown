@@ -36,9 +36,8 @@ import {
   CollapsibleSection,
   type CollapsibleSectionProps,
 } from "./renderers/collapsible-sections.js";
+import type { EmbedReader } from "./renderers/embed-file.js";
 import { headingComponents } from "./renderers/headings.js";
-import type { HtmlEmbedResolver } from "./renderers/html.js";
-import type { TextEmbedResolver } from "./renderers/text.js";
 import { BarkdownLink, type BarkdownLinkProps } from "./renderers/link.js";
 import {
   ImagePreview,
@@ -60,6 +59,12 @@ const markdownSchema = {
   ],
   attributes: {
     ...defaultSchema.attributes,
+    // GitHub emoji shortcodes become images with this class; without it the
+    // sanitizer drops the class and the emoji renders as a media card.
+    img: [
+      ...(defaultSchema.attributes?.img ?? []),
+      ["className", "barkdown-emoji"],
+    ],
     video: [
       "src",
       "poster",
@@ -101,13 +106,20 @@ export type BarkdownMarkdownProps = {
   /**
    * Local path to the document file. When set, headings show a hashtag button
    * on hover that copies `path:line` — the heading's source line — in the
-   * style of VS Code line references.
+   * style of VS Code line references. Embed Copy actions resolve companion
+   * and local media paths next to it.
    */
   headingCopyPath?: string;
-  /** Resolves companion HTML, from a dataset or an asynchronous host reader. */
-  htmlEmbed?: HtmlEmbedResolver;
-  /** Resolves external text files relative to the current document. */
-  textEmbed?: TextEmbedResolver;
+  /** Reads a `barkdown-html` companion file. See `EmbedReader`. */
+  htmlEmbed?: EmbedReader;
+  /** Reads a `barkdown-text` companion file. See `EmbedReader`. */
+  textEmbed?: EmbedReader;
+  /**
+   * Host page that shows a `barkdown-text` companion in a full window. The
+   * path is the fence text, relative to the document. Without it, the Open
+   * action of text embeds is disabled.
+   */
+  embedUrl?: (path: string) => string | undefined;
   linkIcons?: boolean;
   style?: CSSProperties;
 };
@@ -142,6 +154,7 @@ export function BarkdownMarkdown({
   headingCopyPath,
   htmlEmbed,
   textEmbed,
+  embedUrl,
   linkIcons = true,
   style,
   value,
@@ -156,13 +169,20 @@ export function BarkdownMarkdown({
           documentPath={headingCopyPath}
           htmlEmbed={htmlEmbed}
           textEmbed={textEmbed}
+          embedUrl={embedUrl}
           {...props}
         />
       ),
       pre: (props: ComponentProps<"pre">) => <PreBlock {...props} />,
-      img: ImagePreview,
-      video: VideoPreview,
-      iframe: IframePreview,
+      img: (props: ComponentProps<typeof ImagePreview>) => (
+        <ImagePreview documentPath={headingCopyPath} {...props} />
+      ),
+      video: (props: ComponentProps<typeof VideoPreview>) => (
+        <VideoPreview documentPath={headingCopyPath} {...props} />
+      ),
+      iframe: (props: ComponentProps<typeof IframePreview>) => (
+        <IframePreview documentPath={headingCopyPath} {...props} />
+      ),
       ...(headingCopyPath && !collapsibleHeadings
         ? headingComponents(headingCopyPath)
         : {}),
@@ -187,6 +207,7 @@ export function BarkdownMarkdown({
     headingCopyPath,
     htmlEmbed,
     textEmbed,
+    embedUrl,
     linkIcons,
   ]);
 

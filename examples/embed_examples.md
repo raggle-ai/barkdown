@@ -1,17 +1,29 @@
 # External file embeds
 
-This document shows the supported external-file embeds.
+This document shows every supported embed. Each file and media card has the
+same header: a file badge or thumbnail, the name, and the Reload, Copy, and
+Open actions. Document embeds stay open. Media starts collapsed; select the
+card title to expand it.
 
-## HTML application
+## Interactive diagram
 
 ```barkdown-html
 embed-examples/demo.html
 ```
 
-## Formatted Markdown
+## Formatted notes
 
 ```barkdown-text
 embed-examples/notes.md
+```
+
+## People table
+
+The first row supplies the column headings. Quoted fields can contain commas,
+quotes, and line breaks. Cell markup stays text.
+
+```barkdown-text
+embed-examples/people.csv
 ```
 
 ## Plain text
@@ -20,23 +32,30 @@ embed-examples/notes.md
 embed-examples/readme.txt
 ```
 
-## JSON
+## JSON source
 
 ```barkdown-text
 embed-examples/data.json
 ```
 
-## YAML
+## YAML source
 
 ```barkdown-text
 embed-examples/config.yaml
 ```
 
-## CSV table
+## Image
 
-The first row supplies the column headings. Quoted fields can contain commas,
-quotes, and line breaks.
+![Project overview](embed-examples/overview.png)
 
-```barkdown-text
-embed-examples/people.csv
-```
+## Native video
+
+<video title="Product demo" controls preload="metadata" playsinline src="embed-examples/demo.mp4"></video>
+
+## Hosted video
+
+![Big Buck Bunny on YouTube](https://www.youtube.com/watch?v=aqz-KE-bpKQ)
+
+## Remote page
+
+<iframe src="https://en.wikipedia.org/wiki/Blender_Foundation" title="Blender Foundation on Wikipedia"></iframe>

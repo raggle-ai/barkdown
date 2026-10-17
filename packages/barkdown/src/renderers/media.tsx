@@ -1,59 +1,87 @@
-import { ChevronDown } from "lucide-react";
 import {
   Children,
   type ComponentProps,
+  Fragment,
   isValidElement,
   type ReactNode,
   useId,
   useState,
 } from "react";
 
+import { localPath } from "./embed-file.js";
+import { EmbedFrame, EmbedMediaToggle, EmbedStatus } from "./embed-frame.js";
+
 type MediaProps<T extends "img" | "video" | "iframe"> = ComponentProps<T> & {
   node?: unknown;
+  /** Local path of the Markdown document; resolves local media paths for Copy. */
+  documentPath?: string;
 };
 
+/**
+ * Collapsed media card with the shared header and actions. The expanded
+ * content mounts on demand and unmounts on collapse, which stops playback.
+ * Copy and Open use the original source, never a generated player URL.
+ */
 function MediaPreview({
   title,
   thumbnail,
+  source,
+  documentPath,
   children,
-  contentClassName,
 }: {
   title: string;
   thumbnail: ReactNode;
+  source: string | undefined;
+  documentPath?: string;
   children: ReactNode;
-  contentClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [revision, setRevision] = useState(0);
   const id = useId();
+  const remote = source !== undefined && /^[a-z][a-z0-9+.-]*:/i.test(source);
+
   return (
-    <span className="barkdown-media">
-      <button
-        type="button"
-        className="barkdown-media-toggle"
-        aria-expanded={open}
-        aria-controls={id}
-        onClick={() => setOpen((current) => !current)}
-      >
-        <span className="barkdown-media-thumbnail" aria-hidden="true">
-          {thumbnail}
+    <EmbedFrame
+      media
+      name={title}
+      heading={
+        <EmbedMediaToggle
+          title={title}
+          thumbnail={<Fragment key={revision}>{thumbnail}</Fragment>}
+          open={open}
+          controls={source === undefined ? undefined : id}
+          disabled={source === undefined}
+          onToggle={() => setOpen((current) => !current)}
+        />
+      }
+      actions={{
+        // Reload remounts the expanded view and the thumbnail. While collapsed
+        // it does not open the card or start a player.
+        reload: { onClick: () => setRevision((value) => value + 1) },
+        copy: {
+          kind: remote ? "URL" : "file path",
+          value:
+            source === undefined
+              ? undefined
+              : remote
+                ? source
+                : localPath(documentPath, source),
+        },
+        open: { href: source },
+      }}
+    >
+      {source === undefined ? (
+        <EmbedStatus media>Missing media source</EmbedStatus>
+      ) : (
+        <span id={id} hidden={!open}>
+          {open ? (
+            <span key={revision} data-barkdown-embed-viewport="">
+              {children}
+            </span>
+          ) : null}
         </span>
-        <span>{title}</span>
-        <ChevronDown aria-hidden="true" size={16} />
-      </button>
-      <span id={id} hidden={!open}>
-        {open ? (
-          <span
-            className={
-              contentClassName
-                ? `barkdown-media-content ${contentClassName}`
-                : "barkdown-media-content"
-            }
-          >
-            {children}
-          </span>
-        ) : null}
-      </span>
-    </span>
+      )}
+    </EmbedFrame>
   );
 }
 
@@ -154,21 +182,32 @@ function embedPlayer(
   };
 }
 
-export function ImagePreview({ node: _node, ...props }: MediaProps<"img">) {
+export function ImagePreview({
+  documentPath,
+  node: _node,
+  ...props
+}: MediaProps<"img">) {
   // Emoji remain inline rather than becoming document media cards.
   if (props.className?.split(/\s+/).includes("barkdown-emoji"))
     return <img {...props} />;
+
+  const src = typeof props.src === "string" ? props.src : undefined;
 
   // Obsidian treats ![](hosted-video-url) as a video embed, not an image.
   // Only trigger on links that resolve to a known player, and only when the
   // author gave no explicit markdown title, so plain image URLs and titled
   // images still render as images.
-  if (!props.title && typeof props.src === "string") {
-    const provider = hostedPlayer(props.src);
+  if (!props.title && src) {
+    const provider = hostedPlayer(src);
     if (provider) {
       const title = props.alt || provider.name;
       return (
-        <MediaPreview title={title} thumbnail={provider.thumb}>
+        <MediaPreview
+          title={title}
+          thumbnail={provider.thumb}
+          source={src}
+          documentPath={documentPath}
+        >
           <iframe
             {...provider.iframe}
             allowFullScreen
@@ -180,22 +219,25 @@ export function ImagePreview({ node: _node, ...props }: MediaProps<"img">) {
     }
   }
 
-  const title =
-    props.title ||
-    props.alt ||
-    mediaTitle(typeof props.src === "string" ? props.src : undefined, "Image");
+  const title = props.title || props.alt || mediaTitle(src, "Image");
 
   return (
     <MediaPreview
       title={title}
-      thumbnail={<img src={props.src} alt="" loading="lazy" />}
+      thumbnail={src ? <img src={src} alt="" loading="lazy" /> : null}
+      source={src}
+      documentPath={documentPath}
     >
       <img {...props} />
     </MediaPreview>
   );
 }
 
-export function IframePreview({ node: _node, ...props }: MediaProps<"iframe">) {
+export function IframePreview({
+  documentPath,
+  node: _node,
+  ...props
+}: MediaProps<"iframe">) {
   // Reuse the hosted-player naming so <iframe src="youtube|vimeo|...">
   // titles like Obsidian's video embeds instead of a bare URL path.
   const provider =
@@ -206,14 +248,19 @@ export function IframePreview({ node: _node, ...props }: MediaProps<"iframe">) {
     <MediaPreview
       title={title}
       thumbnail={provider?.thumb ?? null}
-      contentClassName="barkdown-media-iframe"
+      source={props.src}
+      documentPath={documentPath}
     >
       <iframe {...props} allowFullScreen title={title} />
     </MediaPreview>
   );
 }
 
-export function VideoPreview({ node: _node, ...props }: MediaProps<"video">) {
+export function VideoPreview({
+  documentPath,
+  node: _node,
+  ...props
+}: MediaProps<"video">) {
   const source =
     props.src ||
     Children.toArray(props.children).reduce<string | undefined>(
@@ -228,7 +275,12 @@ export function VideoPreview({ node: _node, ...props }: MediaProps<"video">) {
   const title = props.title || provider?.name || mediaTitle(source, "Video");
   if (provider) {
     return (
-      <MediaPreview title={title} thumbnail={provider.thumb}>
+      <MediaPreview
+        title={title}
+        thumbnail={provider.thumb}
+        source={source}
+        documentPath={documentPath}
+      >
         <iframe
           {...provider.iframe}
           allowFullScreen
@@ -244,10 +296,12 @@ export function VideoPreview({ node: _node, ...props }: MediaProps<"video">) {
       thumbnail={
         props.poster ? (
           <img src={props.poster} alt="" loading="lazy" />
-        ) : (
+        ) : source ? (
           <video src={source} muted playsInline preload="metadata" />
-        )
+        ) : null
       }
+      source={source}
+      documentPath={documentPath}
     >
       {/* Unmounting on collapse stops playback and releases the player. */}
       <video {...props} controls autoPlay playsInline />

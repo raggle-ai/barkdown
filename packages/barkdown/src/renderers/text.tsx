@@ -1,87 +1,66 @@
 import { csvParseRows } from "d3-dsv";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { BarkdownMarkdown } from "../react.js";
-
-export type TextEmbedResolver = (
-  path: string,
-) => string | undefined | Promise<string | undefined>;
+import { type EmbedReader, localPath, useEmbedFile } from "./embed-file.js";
+import { EmbedFileTitle, EmbedFrame, EmbedStatus } from "./embed-frame.js";
 
 export function TextEmbed({
   path,
-  resolve,
+  documentPath,
+  reader,
+  url,
 }: {
   path: string;
-  resolve: TextEmbedResolver | undefined;
+  /** Local path of the Markdown document; resolves the companion path for Copy. */
+  documentPath?: string;
+  reader: EmbedReader | undefined;
+  /** Host page that shows the file in a full window. */
+  url?: string;
 }) {
-  const source = useMemo(
-    () => (path && !/[\r\n]/.test(path) ? resolve?.(path) : undefined),
-    [path, resolve],
-  );
-  const pending = typeof source === "string" ? undefined : source;
-  const [result, setResult] = useState<{
-    pending: Promise<string | undefined>;
-    source?: string;
-    failed?: boolean;
-  }>();
-  useEffect(() => {
-    if (!pending) return;
-    let active = true;
-    void pending.then(
-      (source) => {
-        if (active) setResult({ pending, source });
-      },
-      () => {
-        if (active) setResult({ pending, failed: true });
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [pending]);
-
-  const loading = Boolean(pending && result?.pending !== pending);
-  const loaded = pending && result?.pending === pending ? result : undefined;
-  const text = typeof source === "string" ? source : loaded?.source;
-  const title = path.split("/").at(-1) ?? path;
-  const formatted = /\.(?:md|markdown|csv)$/i.test(path);
-  const escaped = text
-    ?.replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-  const srcDoc =
-    escaped === undefined
-      ? undefined
-      : `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;background:#fff;color:#222}pre{margin:0;padding:16px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}</style><pre>${escaped}</pre></html>`;
+  const { loading, content, failed, reload } = useEmbedFile(reader, path);
+  const filename = path.split("/").at(-1) || path;
 
   return (
-    <figure data-barkdown-text-preview="" aria-label={title}>
-      <figcaption>{title}</figcaption>
+    <EmbedFrame
+      name={filename}
+      heading={<EmbedFileTitle filename={filename} />}
+      actions={{
+        reload: { onClick: reload, disabled: loading },
+        copy: { kind: "file path", value: localPath(documentPath, path) },
+        open: { href: content === undefined ? undefined : url },
+      }}
+    >
       {loading ? (
-        <span role="status">Loading text file…</span>
-      ) : text !== undefined && formatted ? (
+        <EmbedStatus>Loading {filename}…</EmbedStatus>
+      ) : content !== undefined ? (
         <div
-          data-barkdown-file-viewport=""
+          data-barkdown-embed-viewport=""
           tabIndex={0}
           role="region"
-          aria-label={title}
+          aria-label={filename}
         >
-          {/\.csv$/i.test(path) ? (
-            <CsvTable value={text} />
-          ) : (
-            <BarkdownMarkdown value={text} />
-          )}
+          <TextContent path={path} value={content} />
         </div>
-      ) : srcDoc !== undefined ? (
-        <iframe srcDoc={srcDoc} sandbox="" title={title} loading="lazy" />
       ) : (
-        <span role="status">
-          {loaded?.failed ? "Could not load text file" : "Text file not found"}:{" "}
+        <EmbedStatus>
+          {failed ? "Could not read file" : "File not found"}:{" "}
           {path || "missing path"}
-        </span>
+        </EmbedStatus>
       )}
-    </figure>
+    </EmbedFrame>
   );
+}
+
+/**
+ * File content by extension: formatted Markdown, a CSV table, or escaped
+ * source text. The embed viewport and the explorer's full view share it.
+ */
+export function TextContent({ path, value }: { path: string; value: string }) {
+  if (/\.csv$/i.test(path)) return <CsvTable value={value} />;
+  if (/\.(?:md|markdown)$/i.test(path))
+    return <BarkdownMarkdown value={value} />;
+  return <pre data-barkdown-source-text="">{value}</pre>;
 }
 
 function CsvTable({ value }: { value: string }) {
