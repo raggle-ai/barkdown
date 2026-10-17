@@ -30,7 +30,7 @@ pnpm preview <markdown-file>
 pnpm install:global
 ```
 
-The Playwright install is a one-time setup for Barkdown's Chromium formatting regression test.
+The Playwright install is a one-time setup for Barkdown's Chromium formatting and Mermaid regression tests.
 
 `pnpm build` and `pnpm typecheck` run against the public npm package. `pnpm extension:dist` builds the unpacked extension into `extension/extension-dist/`.
 

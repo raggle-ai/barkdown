@@ -336,6 +336,37 @@
     transparent
   );
   --barkdown-mermaid-error: #b42318;
+  --pele-bg: var(--barkdown-mermaid-bg);
+  --pele-fg: var(--barkdown-mermaid-text);
+  --pele-muted: var(--barkdown-mermaid-muted);
+  --pele-line: var(--barkdown-mermaid-muted);
+  --pele-surface: color-mix(
+    in srgb,
+    currentColor 5%,
+    var(--barkdown-mermaid-bg)
+  );
+  --pele-surface-alt: color-mix(
+    in srgb,
+    currentColor 9%,
+    var(--barkdown-mermaid-bg)
+  );
+  --pele-border: color-mix(
+    in srgb,
+    currentColor 30%,
+    var(--barkdown-mermaid-bg)
+  );
+  --pele-error: var(--barkdown-mermaid-error);
+  /* Pele draws some labels in --pele-bg on these colors. Mixing toward
+     CanvasText keeps that text readable in light and dark schemes. */
+  --pele-accent: color-mix(in srgb, #5b7bd5, CanvasText 20%);
+  --pele-series-1: color-mix(in srgb, #4c78a8, CanvasText 45%);
+  --pele-series-2: color-mix(in srgb, #f58518, CanvasText 45%);
+  --pele-series-3: color-mix(in srgb, #54a24b, CanvasText 45%);
+  --pele-series-4: color-mix(in srgb, #e45756, CanvasText 45%);
+  --pele-series-5: color-mix(in srgb, #72b7b2, CanvasText 45%);
+  --pele-series-6: color-mix(in srgb, #eeca3b, CanvasText 45%);
+  --pele-series-7: color-mix(in srgb, #b279a2, CanvasText 45%);
+  --pele-series-8: color-mix(in srgb, #9d755d, CanvasText 45%);
   position: relative;
   margin: 1.5rem 0;
   border: 1px solid var(--barkdown-mermaid-border);
@@ -416,17 +447,20 @@
 }
 
 [data-barkdown-mermaid-surface] {
-  display: inline-block;
-  min-width: min(960px, 100%);
   transform-origin: top left;
 }
 
-[data-barkdown-mermaid-surface] svg {
+[data-barkdown-mermaid-surface] > svg {
   display: block;
-  width: max-content;
-  min-width: min(960px, 100%);
-  max-width: none;
-  height: auto;
+  margin-inline: auto;
+}
+
+/* A node fill from the diagram source keeps a dark label, as with Mermaid,
+   unless the source also sets the label color. */
+[data-barkdown-mermaid]
+  .pele-node:has(:not(.pele-label)[style*="fill:"])
+  .pele-label:not([style*="fill:"]) {
+  fill: #1f1f1f;
 }
 
 [data-barkdown-mermaid-status],
