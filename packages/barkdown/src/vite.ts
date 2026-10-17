@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { extname, resolve } from "node:path";
 
 import { extensions } from "./documents.js";
-import { readFolder } from "./node.js";
+import { readFolder, readRange } from "./node.js";
 
 type Server = {
   watcher: {
@@ -21,6 +21,18 @@ type Server = {
   };
 };
 
+/**
+ * Development server routes for the explorer:
+ *
+ * - `GET /api/documents?root=<folder>&head=<bytes>` lists the folder. With
+ *   `head`, Markdown and text files above that size return only their first
+ *   lines plus a `partial` record.
+ * - `GET /api/document?root=<folder>&file=<path>&start=<line>&end=<line>`
+ *   returns one inclusive line range of a document.
+ *
+ * `path` is accepted as an alias of `root`. Without either, the configured
+ * folder is used.
+ */
 export function barkdownPlugin(root: string) {
   const folder = resolve(root);
 
@@ -42,7 +54,8 @@ export function barkdownPlugin(root: string) {
         server.ws.send({ type: "full-reload" });
       });
       server.middlewares.use(async (request, response, next) => {
-        if (request.url?.split("?")[0] !== "/api/documents") {
+        const route = request.url?.split("?")[0];
+        if (route !== "/api/documents" && route !== "/api/document") {
           next();
           return;
         }
@@ -55,12 +68,24 @@ export function barkdownPlugin(root: string) {
             folder;
           const root = resolve(rootParam);
           watch(root);
-          const dataset = await readFolder(root);
+          const payload =
+            route === "/api/document"
+              ? await readRange(root, url.searchParams.get("file") ?? "", {
+                  startLine: Number(url.searchParams.get("start") ?? 1),
+                  endLine: Number(
+                    url.searchParams.get("end") ?? Number.MAX_SAFE_INTEGER,
+                  ),
+                })
+              : await readFolder(root, {
+                  headBytes: url.searchParams.has("head")
+                    ? Number(url.searchParams.get("head"))
+                    : undefined,
+                });
           response.writeHead(200, {
             "Cache-Control": "no-store",
             "Content-Type": "application/json; charset=utf-8",
           });
-          response.end(JSON.stringify(dataset));
+          response.end(JSON.stringify(payload));
         } catch (error) {
           if (!response.headersSent) {
             response.writeHead(500, {

@@ -2,8 +2,10 @@ import { ChevronDown } from "lucide-react";
 import {
   Children,
   cloneElement,
+  createContext,
   isValidElement,
   type ReactNode,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -112,8 +114,18 @@ export function CollapsibleSection({
  * reader collapses a section.
  */
 export function useSectionToggle() {
-  const [open, setOpen] = useState(true);
+  const all = useContext(CollapseAllContext);
+  const [open, setOpen] = useState(!all.collapsed);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // A reader-level "collapse all" or "expand all" resets every section,
+  // including sections mounted later by progressive rendering.
+  const generation = useRef(all.generation);
+  useEffect(() => {
+    if (generation.current === all.generation) return;
+    generation.current = all.generation;
+    setOpen(!all.collapsed);
+  }, [all.collapsed, all.generation]);
 
   useEffect(() => {
     const openFragmentAncestors = () => {
@@ -137,3 +149,15 @@ export function useSectionToggle() {
 
   return { open, toggle, contentRef };
 }
+
+export type CollapseAllState = {
+  /** Increment to apply `collapsed` to every section again. */
+  generation: number;
+  collapsed: boolean;
+};
+
+/** Shared collapse/expand state for every collapsible section below it. */
+export const CollapseAllContext = createContext<CollapseAllState>({
+  generation: 0,
+  collapsed: false,
+});

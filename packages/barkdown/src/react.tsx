@@ -1,14 +1,14 @@
 import { evaluate } from "@mdx-js/mdx";
-import { Check, ChevronDown, Copy, Hash, Link2, RotateCw } from "lucide-react";
+import { Check, Copy, Link2, RotateCw } from "lucide-react";
 import {
-  Children,
   type ComponentProps,
   type ComponentType,
   type CSSProperties,
-  cloneElement,
   isValidElement,
   type JSX,
   type ReactNode,
+  type RefObject,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -26,7 +26,15 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import * as runtime from "react/jsx-runtime";
 
+import { type DocumentIndex, cachedDocumentIndex } from "./document-index.js";
 import { remarkGithubEmojiImages } from "./emoji.js";
+import {
+  type BarkdownLargeDocumentInput,
+  type BarkdownRenderMode,
+  renderMode,
+  resolveLargeDocumentPolicy,
+} from "./large-document-policy.js";
+import { highlightCode } from "./lazy-highlight.js";
 import { BarkdownLink } from "./link.js";
 import {
   COLLAPSIBLE_SECTION_TAG,
@@ -36,7 +44,10 @@ import {
   CollapsibleSection,
   type CollapsibleSectionProps,
 } from "./react-collapsible-sections.js";
-import { rehypeHeadingLines } from "./rehype-heading-lines.js";
+import {
+  type RehypeHeadingsOptions,
+  rehypeHeadings,
+} from "./rehype-headings.js";
 import {
   HeadingCopyAnchor,
   headingReference,
@@ -44,6 +55,13 @@ import {
 } from "./react-heading-copy.js";
 import { BarkdownMermaid } from "./react-mermaid.js";
 import { ImagePreview, IframePreview, VideoPreview } from "./react-media.js";
+import { BarkdownPlainText } from "./react-plain-text.js";
+import {
+  type BarkdownRenderProgress,
+  type DocumentChunk,
+  ProgressiveMarkdown,
+  useFragmentNavigation,
+} from "./react-progressive.js";
 import { useCopyToClipboard } from "./use-copy-to-clipboard.js";
 
 const markdownSchema = {
@@ -85,6 +103,12 @@ const sanitizeMarkdown: [typeof rehypeSanitize, typeof markdownSchema] = [
   rehypeSanitize,
   markdownSchema,
 ];
+const remarkPlugins = [
+  remarkBreaks,
+  remarkGfm,
+  remarkMath,
+  remarkGithubEmojiImages,
+];
 
 function joinClassNames(
   ...values: Array<string | undefined>
@@ -123,6 +147,25 @@ export type BarkdownMarkdownProps = {
   ) => string | undefined | Promise<string | undefined>;
   linkIcons?: boolean;
   style?: CSSProperties;
+  /**
+   * Index of the document `value` belongs to. Computed from `value` and
+   * cached when omitted. Pass it when `value` is a slice of a document, such
+   * as the body after frontmatter, together with `firstLine`.
+   */
+  index?: DocumentIndex;
+  /** 1-based source line of the first line of `value`. Default 1. */
+  firstLine?: number;
+  /**
+   * Large-document policy: thresholds for progressive section rendering,
+   * lazy syntax highlighting, and the plain-text fallback. Omit for the
+   * defaults; pass `false` to render in one pass regardless of size.
+   */
+  largeDocument?: BarkdownLargeDocumentInput;
+  /**
+   * Rendering progress. One-pass renders report a single `done` call;
+   * progressive renders report each slice.
+   */
+  onRenderProgress?: (progress: BarkdownRenderProgress) => void;
 };
 
 export type BarkdownMdxProps = {
@@ -152,12 +195,42 @@ export function BarkdownMarkdown({
   collapsibleHeadings = false,
   components,
   copyCode = true,
+  firstLine = 1,
   headingCopyPath,
   htmlEmbed,
+  index,
+  largeDocument,
   linkIcons = true,
+  onRenderProgress,
   style,
   value,
 }: BarkdownMarkdownProps) {
+  const documentIndex = useMemo(
+    () => index ?? cachedDocumentIndex(value),
+    [index, value],
+  );
+  const policyKey = JSON.stringify(largeDocument ?? null);
+  const policy = useMemo(
+    () =>
+      largeDocument === false
+        ? undefined
+        : resolveLargeDocumentPolicy(largeDocument),
+    // The policy is plain data; its serialized form is the identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [policyKey],
+  );
+  const mode: BarkdownRenderMode = policy
+    ? renderMode(
+        { bytes: documentIndex.bytes, lines: documentIndex.lines },
+        policy,
+      )
+    : "standard";
+  const lazyHighlight =
+    mode === "progressive" && Boolean(policy?.lazyHighlight);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef(onRenderProgress);
+  progressRef.current = onRenderProgress;
+
   const mergedComponents = useMemo<MarkdownComponents>(() => {
     const merged = {
       a: ({ node: _node, ...props }: BarkdownElementProps<"a">) =>
@@ -166,6 +239,7 @@ export function BarkdownMarkdown({
         <CodeBlock
           copy={copyCode}
           documentPath={headingCopyPath}
+          highlight={lazyHighlight ? "lazy" : "eager"}
           htmlEmbed={htmlEmbed}
           {...props}
         />
@@ -197,48 +271,101 @@ export function BarkdownMarkdown({
     copyCode,
     headingCopyPath,
     htmlEmbed,
+    lazyHighlight,
     linkIcons,
   ]);
 
-  const rehypePlugins = useMemo(
-    () =>
-      collapsibleHeadings
-        ? [
-            rehypeRaw,
-            sanitizeMarkdown,
-            rehypeHighlight,
-            rehypeKatex,
-            rehypeHeadingLines,
-            rehypeCollapsibleHeadings,
-          ]
-        : [
-            rehypeRaw,
-            sanitizeMarkdown,
-            rehypeHighlight,
-            rehypeKatex,
-            rehypeHeadingLines,
-          ],
-    [collapsibleHeadings],
+  const pluginsFor = useCallback(
+    (line: number) => [
+      rehypeRaw,
+      sanitizeMarkdown,
+      ...(lazyHighlight ? [] : [rehypeHighlight]),
+      rehypeKatex,
+      [rehypeHeadings, { index: documentIndex, firstLine: line }] as [
+        typeof rehypeHeadings,
+        RehypeHeadingsOptions,
+      ],
+      ...(collapsibleHeadings ? [rehypeCollapsibleHeadings] : []),
+    ],
+    [collapsibleHeadings, documentIndex, lazyHighlight],
   );
+  const rehypePlugins = useMemo(
+    () => pluginsFor(firstLine),
+    [firstLine, pluginsFor],
+  );
+  const renderChunk = useCallback(
+    (text: string, chunk: DocumentChunk) => (
+      <ReactMarkdown
+        components={mergedComponents}
+        rehypePlugins={pluginsFor(chunk.startLine)}
+        remarkPlugins={remarkPlugins}
+        remarkRehypeOptions={{
+          clobberPrefix: `user-content-${chunk.startLine}-`,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    ),
+    [mergedComponents, pluginsFor],
+  );
+  const definitions = useMemo(
+    () =>
+      documentIndex.definitions.length
+        ? `\n\n${documentIndex.definitions.join("\n")}\n`
+        : "",
+    [documentIndex],
+  );
+
+  useFragmentNavigation(
+    containerRef,
+    documentIndex,
+    mode === "standard" ? undefined : () => true,
+  );
+  useEffect(() => {
+    if (mode === "progressive") return;
+    progressRef.current?.({ rendered: 1, total: 1, done: true });
+  }, [mode, value]);
+
+  if (mode === "plain-text") {
+    return (
+      <BarkdownPlainText
+        className={className}
+        firstLine={firstLine}
+        style={style}
+        value={value}
+      />
+    );
+  }
 
   return (
     <div
       className={joinClassNames("barkdown-content", className)}
       data-barkdown=""
+      data-barkdown-progressive={mode === "progressive" ? "" : undefined}
+      ref={containerRef}
       style={style}
     >
-      <ReactMarkdown
-        components={mergedComponents}
-        rehypePlugins={rehypePlugins}
-        remarkPlugins={[
-          remarkBreaks,
-          remarkGfm,
-          remarkMath,
-          remarkGithubEmojiImages,
-        ]}
-      >
-        {value}
-      </ReactMarkdown>
+      {mode === "progressive" && policy ? (
+        <ProgressiveMarkdown
+          containerRef={containerRef}
+          definitions={definitions}
+          firstLine={firstLine}
+          index={documentIndex}
+          keepNesting={collapsibleHeadings}
+          onProgress={onRenderProgress}
+          policy={policy}
+          renderChunk={renderChunk}
+          value={value}
+        />
+      ) : (
+        <ReactMarkdown
+          components={mergedComponents}
+          rehypePlugins={rehypePlugins}
+          remarkPlugins={remarkPlugins}
+        >
+          {value}
+        </ReactMarkdown>
+      )}
     </div>
   );
 }
@@ -582,11 +709,55 @@ function HtmlPreview({
   );
 }
 
+/**
+ * Highlights a code block once it scrolls near the viewport. Used when the
+ * Markdown pipeline skipped `rehype-highlight` for a large document.
+ */
+function useLazyHighlight(
+  ref: RefObject<HTMLElement | null>,
+  code: string,
+  language: string | undefined,
+): string | undefined {
+  const [html, setHtml] = useState<{ code: string; html: string }>();
+  useEffect(() => {
+    if (!language) return;
+    const element = ref.current;
+    if (!element) return;
+    let cancelled = false;
+    const start = () => {
+      void highlightCode(code, language).then((result) => {
+        if (!cancelled && result) setHtml({ code, html: result });
+      });
+    };
+    if (typeof IntersectionObserver === "undefined") {
+      start();
+      return () => {
+        cancelled = true;
+      };
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        start();
+      },
+      { rootMargin: "100% 0px" },
+    );
+    observer.observe(element);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [code, language, ref]);
+  return html?.code === code ? html.html : undefined;
+}
+
 export function CodeBlock({
   children,
   className,
   copy = true,
   documentPath,
+  highlight = "eager",
   htmlEmbed,
   inline,
   node: _node,
@@ -594,14 +765,22 @@ export function CodeBlock({
 }: BarkdownCodeProps & {
   copy?: boolean;
   documentPath?: string;
+  /** `lazy` highlights the block itself when it comes near the viewport. */
+  highlight?: "eager" | "lazy";
   htmlEmbed?: BarkdownMarkdownProps["htmlEmbed"];
 }) {
   const { copied, copy: copyText } = useCopyToClipboard();
+  const codeRef = useRef<HTMLElement>(null);
   const text = String(children ?? "").replace(/\n$/, "");
   const language = /(?:^|\s)language-([\w+-]+)/
     .exec(className ?? "")?.[1]
     ?.toLowerCase();
   const block = inline === false || Boolean(className) || text.includes("\n");
+  const highlighted = useLazyHighlight(
+    codeRef,
+    text,
+    highlight === "lazy" && block ? language : undefined,
+  );
 
   if (language === "mermaid") {
     return <BarkdownMermaid diagram={text} />;
@@ -626,9 +805,18 @@ export function CodeBlock({
 
   return (
     <span data-barkdown-code-block="">
-      <code className={className} {...props}>
-        {children}
-      </code>
+      {highlighted ? (
+        <code
+          className={joinClassNames("hljs", className)}
+          dangerouslySetInnerHTML={{ __html: highlighted }}
+          ref={codeRef}
+          {...props}
+        />
+      ) : (
+        <code className={className} ref={codeRef} {...props}>
+          {children}
+        </code>
+      )}
       {copy ? (
         <button
           aria-label="Copy code"

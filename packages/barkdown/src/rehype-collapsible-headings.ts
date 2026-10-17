@@ -4,7 +4,7 @@
  * Each group:
  * - Wraps a heading and all content until the next same-or-higher-level heading
  * - Nests sub-heading groups inside their parent group
- * - Gives the heading a stable, unique ID derived from its text
+ * - Keeps the heading's stable ID from `rehypeHeadings`
  *
  * Groups use the `barkdown-section` element name. `BarkdownMarkdown` maps that
  * element to an interactive React component that renders the real toggle
@@ -12,6 +12,7 @@
  * grouping is done here, in the tree, because a `components.h1`-style override
  * cannot collect the Markdown nodes that follow a heading.
  */
+import { HeadingIdRegistry } from "./heading-ids.js";
 
 interface HastText {
   type: "text";
@@ -54,35 +55,15 @@ function extractHeadingText(node: HastNode): string {
   return node.children.map((child) => extractHeadingText(child)).join("");
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-/**
- * Assign unique, stable IDs to headings. Uses a counter when heading text
- * produces duplicate slugs within the same document.
- */
-class HeadingIdRegistry {
-  private seen = new Map<string, number>();
-
-  id(headingText: string): string {
-    const base = slugify(headingText) || "section";
-    const count = this.seen.get(base) ?? 0;
-    this.seen.set(base, count + 1);
-    return count === 0 ? base : `${base}-${count}`;
-  }
-}
-
 function createHeadingElement(
   originalHeading: HastElement,
-  headingId: string,
+  registry: HeadingIdRegistry,
 ): HastElement {
+  const existingId = originalHeading.properties?.id;
+  const headingId =
+    typeof existingId === "string" && existingId
+      ? existingId
+      : registry.id(extractHeadingText(originalHeading));
   const existingClass: unknown = originalHeading.properties?.className;
   const classList: string[] = ["barkdown-heading-wrapper"];
   if (Array.isArray(existingClass)) {
@@ -125,8 +106,7 @@ function processChildren(
     }
 
     // A heading starts a new section group.
-    const headingId = idRegistry.id(extractHeadingText(child));
-    const heading = createHeadingElement(child, headingId);
+    const heading = createHeadingElement(child, idRegistry);
 
     // Collect all siblings until the next heading of equal or higher level.
     const sectionChildren: HastNode[] = [];

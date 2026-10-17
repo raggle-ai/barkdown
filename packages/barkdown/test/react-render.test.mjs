@@ -5,7 +5,7 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { BarkdownMarkdown } from "../dist/index.js";
+import { BarkdownMarkdown, indexDocument } from "../dist/index.js";
 
 test("BarkdownMarkdown renders math, highlighted code, and Mermaid containers", () => {
   const value = [
@@ -504,4 +504,74 @@ test("BarkdownMarkdown linkIcons=false skips favicon rendering", () => {
 
   assert.doesNotMatch(html, /barkdown-link-icon/);
   assert.doesNotMatch(html, /favicons/);
+});
+
+test("headings always carry stable ids, source lines, and a focus target", () => {
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value: ["# Guide", "", "## Setup", "", "text", "", "## Setup"].join("\n"),
+    }),
+  );
+
+  assert.match(html, /<h1 id="guide" tabindex="-1" data-barkdown-line="1"/);
+  assert.match(html, /<h2 id="setup" tabindex="-1" data-barkdown-line="3"/);
+  assert.match(html, /<h2 id="setup-1" tabindex="-1" data-barkdown-line="7"/);
+});
+
+test("a precomputed index keeps rendered ids in step with the outline", () => {
+  const value = [
+    "## Résumé",
+    "",
+    "## Παραλία",
+    "",
+    "> ## Quoted",
+    "",
+    "- ## Listed",
+  ].join("\n");
+  const index = indexDocument(value);
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, { value, index }),
+  );
+
+  assert.deepEqual(
+    index.headings.map((heading) => heading.id),
+    ["résumé", "παραλία"],
+  );
+  assert.match(html, /<h2 id="résumé"/);
+  assert.match(html, /<h2 id="παραλία"/);
+  // Headings outside the outline still get non-colliding ids.
+  assert.match(html, /<h2 id="quoted"/);
+  assert.match(html, /<h2 id="listed"/);
+});
+
+test("largeDocument=false renders a large value in one pass", () => {
+  const value = Array.from(
+    { length: 400 },
+    (_, index) => `## Heading ${index}\n\nParagraph ${index}.\n`,
+  ).join("\n");
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, { value, largeDocument: false }),
+  );
+
+  assert.doesNotMatch(html, /data-barkdown-chunk/);
+  assert.equal(html.match(/<h2 /g).length, 400);
+});
+
+test("large documents render placeholders with heading ids on the server", () => {
+  const value = Array.from(
+    { length: 400 },
+    (_, index) => `## Heading ${index}\n\nParagraph ${index}.\n`,
+  ).join("\n");
+  const html = renderToStaticMarkup(
+    createElement(BarkdownMarkdown, {
+      value,
+      largeDocument: { bytes: 1000, chunkBytes: 2000, initialChunks: 1 },
+    }),
+  );
+
+  assert.match(html, /data-barkdown-progressive=""/);
+  assert.match(html, /data-barkdown-chunk-pending=""/);
+  assert.match(html, /<h2 id="heading-399"/);
+  assert.match(html, /<p>Paragraph 0\.<\/p>/);
+  assert.doesNotMatch(html, /<p>Paragraph 399\.<\/p>/);
 });

@@ -1082,3 +1082,25 @@ button.root-path:hover {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Reader inside the explorer: the toolbar sticks below the document header. */
+.barkdown-explorer .document [data-barkdown-reader] {
+  --barkdown-reader-top: 52px;
+}
+
+.barkdown-explorer .document [data-barkdown-reader-toolbar] {
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(12px);
+}
+
+.barkdown-theme-dark .document [data-barkdown-reader-toolbar] {
+  background: rgb(31 35 27 / 92%);
+}
+
+.barkdown-explorer .document [data-barkdown-reader-content] > .frontmatter {
+  margin-top: 24px;
+}
+
+.barkdown-explorer .document [data-barkdown-reader-content] > [data-barkdown] {
+  padding: 24px 0 48px;
+}

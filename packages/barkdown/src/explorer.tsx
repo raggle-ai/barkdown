@@ -4,7 +4,7 @@ import type {
   MouseEvent,
   ReactNode,
 } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -18,31 +18,46 @@ import {
 } from "lucide-react";
 import { parseDocument } from "yaml";
 
+import { cachedDocumentIndex } from "./document-index.js";
+import {
+  type BarkdownLoadState,
+  advanceLoadState,
+  createLoadState,
+  isAbortError,
+} from "./document-load.js";
 import { LinkIcon } from "./link.js";
 import {
+  type BarkdownDataset,
+  type BarkdownDocument as BarkdownDocumentRecord,
+  type BarkdownKind,
+  type BarkdownSource,
   documentKind,
   documentMatches,
   documentPath,
   documentUrl,
-  type BarkdownKind,
 } from "./documents.js";
-import { BarkdownContent } from "./react.js";
+import { BarkdownReader } from "./react-reader.js";
+import { useDocumentContent } from "./use-document-content.js";
 
-export type BarkdownDocument = {
-  path: string;
-  content: string;
-  kind: BarkdownKind;
-};
-
-export type BarkdownDataset = {
-  root: string;
-  documents: BarkdownDocument[];
-};
-
-export type BarkdownSource = {
-  read(): Promise<BarkdownDataset>;
-  openRoot?(): Promise<void>;
-};
+/** One document of a dataset. Shares its name with the component below. */
+export type BarkdownDocument = BarkdownDocumentRecord;
+export type {
+  BarkdownDataset,
+  BarkdownPartial,
+  BarkdownRange,
+  BarkdownRangeResult,
+  BarkdownReadOptions,
+  BarkdownSource,
+} from "./documents.js";
+export {
+  type LoadDocumentOptions,
+  LoadCancelledError,
+  loadDocumentContent,
+} from "./document-load.js";
+export {
+  type DocumentContentState,
+  useDocumentContent,
+} from "./use-document-content.js";
 
 export type BarkdownExplorerProps = {
   brand?: string;
@@ -54,11 +69,6 @@ export type BarkdownExplorerProps = {
 type FolderNode = {
   folders: Map<string, FolderNode>;
   documents: BarkdownDocument[];
-};
-
-type Metadata = {
-  body: string;
-  entries: [string, unknown][];
 };
 
 const queryPath = () => documentPath(window.location.search);
@@ -106,16 +116,58 @@ function tree(documents: BarkdownDocument[]) {
   return root;
 }
 
-function metadata(content: string): Metadata {
-  const match = /^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/.exec(content);
-  if (!match) return { body: content, entries: [] };
-  const parsed = parseDocument(match[1] ?? "");
+/** Frontmatter fields of an indexed Markdown document. */
+function frontmatterEntries(yamlText: string | undefined): [string, unknown][] {
+  if (!yamlText) return [];
+  const parsed = parseDocument(yamlText);
   const value: unknown = parsed.errors.length ? undefined : parsed.toJS();
-  const entries =
-    value && typeof value === "object" && !Array.isArray(value)
-      ? Object.entries(value)
-      : [];
-  return { body: content.slice(match[0].length), entries };
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? Object.entries(value)
+    : [];
+}
+
+/**
+ * Reads the folder dataset with cancellation. A source change aborts the
+ * previous read, and a result that arrives after that is never applied.
+ */
+function useDataset(source: BarkdownSource) {
+  const [data, setData] = useState<BarkdownDataset>();
+  const [state, setState] = useState<BarkdownLoadState>(() =>
+    createLoadState("listing"),
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setState(createLoadState("listing"));
+    void source
+      .read({ signal: controller.signal })
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setData(result);
+        setState((current) =>
+          advanceLoadState(current, { phase: "ready", progress: 1 }),
+        );
+      })
+      .catch((reason: unknown) => {
+        if (controller.signal.aborted || isAbortError(reason)) return;
+        setState((current) =>
+          advanceLoadState(current, {
+            phase: "error",
+            error:
+              reason instanceof Error
+                ? reason
+                : new Error("Could not load files."),
+          }),
+        );
+      });
+    return () => controller.abort();
+  }, [source]);
+
+  return {
+    data,
+    state,
+    error: state.phase === "error" ? (state.error?.message ?? "") : "",
+  };
 }
 
 export function BarkdownExplorer({
@@ -124,40 +176,26 @@ export function BarkdownExplorer({
   showLinkIcons = true,
   source,
 }: BarkdownExplorerProps) {
-  const [data, setData] = useState<BarkdownDataset>();
-  const [error, setError] = useState("");
+  const { data, error } = useDataset(source);
   const [selected, setSelected] = useState(queryPath);
   const [query, setQuery] = useState("");
   const [sidebar, setSidebar] = useState(() => window.innerWidth > 760);
   const search = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void source
-      .read()
-      .then((result) => {
-        setData(result);
-        setSelected((current) => {
-          if (
-            current &&
-            result.documents.some((item) => item.path === current)
-          ) {
-            return current;
-          }
-          return (
-            result.documents.find(
-              (item) => item.path.toLowerCase() === "readme.md",
-            )?.path ??
-            result.documents[0]?.path ??
-            null
-          );
-        });
-      })
-      .catch((reason: unknown) => {
-        setError(
-          reason instanceof Error ? reason.message : "Could not load files.",
-        );
-      });
-  }, [source]);
+    if (!data) return;
+    setSelected((current) => {
+      if (current && data.documents.some((item) => item.path === current)) {
+        return current;
+      }
+      return (
+        data.documents.find((item) => item.path.toLowerCase() === "readme.md")
+          ?.path ??
+        data.documents[0]?.path ??
+        null
+      );
+    });
+  }, [data]);
 
   useEffect(() => {
     const update = () => setSelected(queryPath());
@@ -198,47 +236,54 @@ export function BarkdownExplorer({
       }
     : undefined;
 
-  const open = (path: string) => {
+  const open = useCallback((path: string) => {
     const url = documentUrl(window.location.href, path);
     window.history.pushState(null, "", url);
     setSelected(path);
     setSidebar(false);
     window.scrollTo({ top: 0 });
-    documentElement()?.focus({ preventScroll: true });
-  };
+    window.document
+      .querySelector<HTMLElement>("#document")
+      ?.focus({ preventScroll: true });
+  }, []);
 
-  const documentElement = () =>
-    window.document.querySelector<HTMLElement>("#document");
+  // Stable component identity: a new link component on every render would
+  // make every rendered Markdown chunk re-render.
+  const documentPathValue = document?.path;
+  const documents = data?.documents;
+  const relativeLink = useMemo(
+    () =>
+      function RelativeLink({
+        href,
+        onClick,
+        children,
+        ...props
+      }: AnchorHTMLAttributes<HTMLAnchorElement>) {
+        const handle = (event: MouseEvent<HTMLAnchorElement>) => {
+          onClick?.(event);
+          if (event.defaultPrevented || !href || !documentPathValue) return;
+          if (/^[a-z]+:/i.test(href) || href.startsWith("#")) return;
+          const clean = href.split("#")[0]?.split("?")[0];
+          if (!clean || !documentKind(clean)) return;
+          const base = documentPathValue.split("/").slice(0, -1).join("/");
+          const resolved = new URL(
+            clean,
+            `https://kennel.local/${base}/`,
+          ).pathname.slice(1);
+          if (!documents?.some((item) => item.path === resolved)) return;
+          event.preventDefault();
+          open(resolved);
+        };
 
-  const relativeLink = ({
-    href,
-    onClick,
-    children,
-    ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement>) => {
-    const handle = (event: MouseEvent<HTMLAnchorElement>) => {
-      onClick?.(event);
-      if (event.defaultPrevented || !href || !document) return;
-      if (/^[a-z]+:/i.test(href) || href.startsWith("#")) return;
-      const clean = href.split("#")[0]?.split("?")[0];
-      if (!clean || !documentKind(clean)) return;
-      const base = document.path.split("/").slice(0, -1).join("/");
-      const resolved = new URL(
-        clean,
-        `https://kennel.local/${base}/`,
-      ).pathname.slice(1);
-      if (!data?.documents.some((item) => item.path === resolved)) return;
-      event.preventDefault();
-      open(resolved);
-    };
-
-    return (
-      <a {...props} href={href} onClick={handle}>
-        {showLinkIcons && href ? <LinkIcon href={href} /> : null}
-        {children}
-      </a>
-    );
-  };
+        return (
+          <a {...props} href={href} onClick={handle}>
+            {showLinkIcons && href ? <LinkIcon href={href} /> : null}
+            {children}
+          </a>
+        );
+      },
+    [documentPathValue, documents, open, showLinkIcons],
+  );
 
   return (
     <main
@@ -404,6 +449,7 @@ export function BarkdownExplorer({
                 documents={data?.documents}
                 root={data?.root}
                 linkComponent={relativeLink}
+                source={source}
               />
             </article>
           </>
@@ -565,28 +611,7 @@ export function BarkdownDocument({
   path,
   source,
 }: BarkdownDocumentProps) {
-  const [data, setData] = useState<BarkdownDataset>();
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    void source
-      .read()
-      .then((result) => {
-        if (!active) return;
-        setData(result);
-        setError("");
-      })
-      .catch((reason: unknown) => {
-        if (!active) return;
-        setError(
-          reason instanceof Error ? reason.message : "Could not load file.",
-        );
-      });
-    return () => {
-      active = false;
-    };
-  }, [source]);
+  const { data, error } = useDataset(source);
 
   const document = useMemo(() => {
     if (!data) return undefined;
@@ -608,6 +633,7 @@ export function BarkdownDocument({
         document={document}
         documents={data.documents}
         root={data.root}
+        source={source}
       />
     </div>
   );
@@ -619,6 +645,7 @@ type DocumentContentProps = {
   /** Absolute folder root on the local machine; enables heading copy links. */
   root?: string;
   linkComponent?: ComponentType<AnchorHTMLAttributes<HTMLAnchorElement>>;
+  source: BarkdownSource;
 };
 
 function DocumentContent({
@@ -626,23 +653,44 @@ function DocumentContent({
   documents,
   root,
   linkComponent,
+  source,
 }: DocumentContentProps) {
-  const content =
-    document.kind === "markdown"
-      ? metadata(document.content)
-      : { body: document.content, entries: [] };
+  const { content, state } = useDocumentContent(source, document);
   const headingCopyPath = root
     ? `${root.replace(/[\\/]+$/, "")}/${document.path}`
     : undefined;
+  const cacheKey = `${root ?? ""}/${document.path}@${content.length}`;
+  const index = useMemo(
+    () =>
+      document.kind === "markdown"
+        ? cachedDocumentIndex(content, { key: cacheKey })
+        : undefined,
+    [cacheKey, content, document.kind],
+  );
+  const entries = useMemo(
+    () => frontmatterEntries(index?.frontmatter?.text),
+    [index],
+  );
+  const components = useMemo(
+    () => (linkComponent ? { a: linkComponent } : undefined),
+    [linkComponent],
+  );
+  const htmlEmbed = useCallback(
+    (path: string) => {
+      const resolved = resolveEmbeddedHtmlPath(document.path, path);
+      const embedded = documents?.find(
+        (item) => item.kind === "html" && item.path === resolved,
+      );
+      return embedded?.content;
+    },
+    [document.path, documents],
+  );
 
   return (
     <article
       className={document.kind === "html" ? "document is-html" : "document"}
       tabIndex={-1}
     >
-      {content.entries.length ? (
-        <Frontmatter entries={content.entries} />
-      ) : null}
       {document.kind === "html" ? (
         <iframe
           className="html-document"
@@ -650,23 +698,24 @@ function DocumentContent({
           srcDoc={document.content}
           title={documentTitle(document.path)}
         />
-      ) : document.kind === "markdown" ? (
-        <BarkdownContent
-          mode="markdown"
-          value={content.body}
+      ) : document.kind === "markdown" && index ? (
+        <BarkdownReader
+          cacheKey={cacheKey}
+          components={components}
+          frontmatter={
+            entries.length ? <Frontmatter entries={entries} /> : null
+          }
           headingCopyPath={headingCopyPath}
-          components={linkComponent ? { a: linkComponent } : undefined}
-          htmlEmbed={(path) => {
-            const resolved = resolveEmbeddedHtmlPath(document.path, path);
-            const embedded = documents?.find(
-              (item) => item.kind === "html" && item.path === resolved,
-            );
-            return embedded?.content;
-          }}
+          htmlEmbed={htmlEmbed}
+          index={index}
+          loading={state}
+          value={content}
         />
       ) : (
-        <pre className="text-document">{document.content}</pre>
+        <pre className="text-document">{content}</pre>
       )}
     </article>
   );
 }
+
+export type { BarkdownKind };

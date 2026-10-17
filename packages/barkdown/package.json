@@ -28,6 +28,10 @@
       "types": "./dist/documents.d.ts",
       "import": "./dist/documents.js"
     },
+    "./document-index": {
+      "types": "./dist/document-index.d.ts",
+      "import": "./dist/document-index.js"
+    },
     "./node": {
       "types": "./dist/node.d.ts",
       "import": "./dist/node.js"
@@ -76,13 +80,15 @@
     "test": "pnpm test:unit && pnpm test:browser",
     "test:browser": "pnpm build && node --test test/browser/*.test.mjs",
     "test:unit": "pnpm build && node --test test/*.test.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "bench": "pnpm build && node bench/run.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@types/node": "^22.13.4",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.28.1",
     "jsdom": "^30.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
