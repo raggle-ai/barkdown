@@ -20,6 +20,9 @@ The folder reader loads `.md`, `.markdown`, `.html`, `.htm`, `.txt`, `.text`,
 A file input serves that file's parent folder and selects the file. A folder
 input serves the folder and its supported descendants. Serve a common parent
 folder when a Markdown document needs companion HTML from another subfolder.
+Image and video files inside the served folder are served at their relative
+paths, so `![Overview](files/overview.png)` and
+`<video src="files/demo.mp4">` work for documents at the folder root.
 
 ## Run the preview
 
@@ -75,6 +78,9 @@ command instead.
 4. For visual verification, open the preview URL in a browser and use the
    relevant content skill's expected result. HTTP checks alone do not prove
    that media, formulas, diagrams, or embedded scripts rendered correctly.
+   Every file embed and media card shows the same header with **Reload**,
+   **Copy**, and **Open** actions. Reload reads the file from disk again
+   without reloading the page.
 
 ## Share desktop and phone links
 

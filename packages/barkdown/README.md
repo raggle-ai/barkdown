@@ -30,7 +30,17 @@ Pass `collapsibleHeadings` to turn each heading into a section control. The sect
 <BarkdownContent mode="markdown" value={value} collapsibleHeadings />
 ```
 
-## Interactive HTML in Markdown
+## Embedded files and media
+
+Every embed uses one frame: a header with a file badge or thumbnail, the file
+name or media title, and three actions in the same order: **Reload**, **Copy
+file path** or **Copy URL**, and **Open**. Each action has a tooltip and an
+accessible label that includes the name. Document embeds show their content in
+a focusable viewport that is `min(520px, 60vh)` tall with a 240 px minimum and
+scrolls inside the frame. Media keeps a collapsed card with a separate expand
+control and its own aspect ratio.
+
+### Interactive HTML in Markdown
 
 Use a `barkdown-html` fence with one document-relative companion path:
 
@@ -42,34 +52,38 @@ cli-variations.html
 
 `BarkdownExplorer` and `BarkdownDocument` resolve companions from their loaded
 folder dataset. Hosts that import `BarkdownContent` directly must supply
-`htmlEmbed`. The resolver can return HTML immediately or return a promise:
+`htmlEmbed`, an `EmbedReader`:
 
 ```tsx
-<BarkdownContent mode="markdown" value={value} htmlEmbed={readCompanionHtml} />
+import type { EmbedReader } from "@raggle-ai/barkdown";
+
+const readCompanion: EmbedReader = (path, { reload }) =>
+  readTextFile(resolveFromDocument(path), { fresh: reload });
+
+<BarkdownContent mode="markdown" value={value} htmlEmbed={readCompanion} />;
 ```
 
-The host reader must resolve the path relative to the Markdown document and
-restrict reads to its permitted folder. Return `undefined` for missing or
-refused files. Keep the reader stable across renders, for example with
-`useCallback`.
+The reader receives the fence path, relative to the Markdown document, and
+`{ reload: true }` when the user selects Reload. It must then return the
+current file content, not a loaded snapshot. It can return the text directly or
+return a promise, and must return `undefined` for a missing or refused file and
+restrict reads to its permitted folder. Keep the reader stable across renders,
+for example with `useCallback`; a new reader identity reads the file again.
 
-BarkDown shows a loading state while a promise is pending, reports missing
-files and failed reads, and renders the HTML in an isolated iframe with
-`sandbox="allow-scripts"`. The preview bar has three icons: **Reload HTML**,
-**Copy HTML file path**, and **Open HTML**. Reload calls the reader again and
-restarts the embedded page, including when the returned HTML has not changed.
-The reload control also remains available after a failed read. A host reader
-should read the current file on each call so saved edits appear on reload.
-The copy icon uses the Markdown file's
-`headingCopyPath` to copy the companion's local path, or copies the relative
-companion path when no document path is available. The link uses normal browser
-behaviour: click for the current tab, Command-click or Ctrl-click for a new tab.
-The embedded preview has a 320 px minimum height on all screen sizes. Use the
-link for a full-window preview. The full preview keeps the same isolation and
-does not grant access to the host page. Standalone HTML documents in the explorer
-remain script-blocked.
+BarkDown shows one loading message while a promise is pending, reports missing
+files and failed reads, and keeps Reload available after a failure. Results
+from an earlier path are ignored, and synchronous reader errors are caught like
+rejected promises. The HTML renders in an isolated iframe with
+`sandbox="allow-scripts"` and no same-origin access. Reload reads the file
+again and restarts the embedded page. **Copy file path** resolves the companion
+next to the Markdown file's `headingCopyPath`, or copies the relative companion
+path when no document path is available. **Open** shows the same HTML in a
+full-window page that keeps the same sandbox; a raw HTML file URL is never
+used. The link uses normal browser behaviour: click for the current tab,
+Command-click or Ctrl-click for a new tab. Standalone HTML documents in the
+explorer remain script-blocked.
 
-## External text files in Markdown
+### External text files in Markdown
 
 Use a `barkdown-text` fence with one document-relative file path:
 
@@ -79,14 +93,43 @@ notes/decision.md
 ```
 ````
 
-The explorer resolves the file from its loaded folder dataset. `.md` and
-`.markdown` files render as formatted Markdown. CSV files render as tables;
-the first row supplies the column headings, and quoted fields can contain
-commas, quotes, and newlines. TXT, JSON, and YAML files show escaped source
-text. Each view has a bounded, scrollable viewport. Empty files are valid.
-Hosts that use `BarkdownContent` directly must supply a stable `textEmbed`
-reader with the same return type and folder restrictions as `htmlEmbed`.
-Pending and rejected reads show a status message.
+`.md` and `.markdown` files render as sanitized, formatted Markdown. CSV files
+render as tables; the first row supplies the column headings, and quoted fields
+can contain commas, quotes, and newlines. Cell markup stays text. TXT, JSON,
+and YAML files show escaped source text. Empty files are valid. Hosts that use
+`BarkdownContent` directly supply `textEmbed`, with the same `EmbedReader`
+contract as `htmlEmbed`; one reader can serve both props.
+
+**Open** for a text file needs a host page. Pass `embedUrl`, which receives the
+fence path and returns the URL of the page that shows that file:
+
+```tsx
+<BarkdownContent
+  mode="markdown"
+  value={value}
+  textEmbed={readCompanion}
+  embedUrl={(path) => `/documents?file=${encodeURIComponent(resolve(path))}`}
+/>
+```
+
+The explorer supplies its own `?file=` page, where Markdown stays formatted and
+CSV stays a table. Without `embedUrl`, the Open action of text embeds is
+disabled.
+
+### Media
+
+Images, native video, hosted players (YouTube, Vimeo, Streamable, Loom), and
+raw `<iframe>` pages render as collapsed cards with the same header and actions.
+The expand control is separate from the actions. Expanding mounts the full
+image, video, or player; collapsing unmounts it, which stops playback. **Copy**
+and **Open** use the original source: the local path, resolved next to
+`headingCopyPath`, for a local file, or the original URL for a remote source,
+including the watch URL of a hosted video rather than its player URL. **Reload**
+remounts an expanded view and resets video playback; while collapsed it only
+refreshes the thumbnail and does not start a player. A media element without a
+source shows a missing-source message with Copy, Open, and expand disabled.
+GitHub emoji images stay inline. Media files load through the browser, never
+through the text reader.
 
 ## Folder explorer
 
